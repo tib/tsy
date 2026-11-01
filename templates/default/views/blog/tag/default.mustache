@@ -1,0 +1,21 @@
+{{<html}}
+{{$main}}
+<article class="article-shell taxonomy-shell tag-shell">
+    <a class="back-link" href="/">← Back to home</a>
+    <header class="article-header">
+        <p class="eyebrow">Journal topic</p>
+        <h1>{{page.title}}</h1>
+        <p class="article-deck">{{page.description}}</p>
+        {{& page.contents.html}}
+    </header>
+    <section class="home-latest">
+        <div class="section-heading"><div><p class="eyebrow">Filed under</p><h2>{{page.title}}</h2></div><span class="section-index">{{count(page.posts)}} ENTRIES</span></div>
+        <div class="feature-list">
+        {{#page.posts}}
+            {{> partials.blog.post}}
+        {{/page.posts}}
+        </div>
+    </section>
+</article>
+{{/main}}
+{{/html}}

@@ -1,0 +1,22 @@
+{{<html}}
+{{$main}}
+<article class="article-shell taxonomy-shell author-shell">
+    <a class="back-link" href="/">← Back to home</a>
+    <header class="article-header">
+        <p class="eyebrow">Journal author</p>
+        {{#page.image}}<img class="author-portrait" src="{{.}}" alt="{{page.title}}">{{/page.image}}
+        <h1>{{page.title}}</h1>
+        <p class="article-deck">{{page.description}}</p>
+        {{& page.contents.html}}
+    </header>
+    <section class="home-latest">
+        <div class="section-heading"><div><p class="eyebrow">By this author</p><h2>Notes along the way</h2></div><span class="section-index">{{count(page.posts)}} ENTRIES</span></div>
+        <div class="feature-list">
+        {{#page.posts}}
+            {{> partials.blog.post}}
+        {{/page.posts}}
+        </div>
+    </section>
+</article>
+{{/main}}
+{{/html}}

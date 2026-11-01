@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-labelledby="title">
+  <title id="title">The Swift Yogi — folded triangle mark</title>
+  <defs>
+    <linearGradient id="forest" x1="15" y1="79" x2="63" y2="12" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#344B39"/>
+      <stop offset="1" stop-color="#71836A"/>
+    </linearGradient>
+    <linearGradient id="saffron" x1="11" y1="77" x2="88" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B78543"/>
+      <stop offset="1" stop-color="#D5B477"/>
+    </linearGradient>
+  </defs>
+  <!-- Interlocking angular planes echo the original Swift mark's folded A and forward slash. -->
+  <path d="m10 76 80-44-7 62-73-18Z" fill="#293B2F"/>
+  <path d="m10 76 32-66h14l33 71H69L48 36 29 78l-19-2Z" fill="url(#forest)"/>
+  <!-- A fine saffron fold traces the base and rising edge, like a quiet sunlit horizon. -->
+  <path d="m10 76 73 18 7-62" stroke="url(#saffron)" stroke-width="6" stroke-linejoin="miter"/>
+</svg>

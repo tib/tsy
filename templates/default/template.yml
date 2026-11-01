@@ -1,0 +1,14 @@
+name: "theswiftyogi.com website"
+description: "A personal journal about Swift, yoga, and finding a steadier rhythm."
+url: "https://github.com/tib/tsy"
+version: "1.0.0"
+generatorVersion:
+    value: "1.0.0-rc.1"
+
+license:
+    name: "MIT license"
+    url: "https://github.com/tib/tsy"
+
+tags:
+    - "theswiftyogi"
+    - "toucan"

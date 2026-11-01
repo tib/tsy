@@ -1,0 +1,14 @@
+{{<html}}
+{{$main}}
+{{& page.contents.html}}
+<div class="home-latest">
+    <div class="section-heading"><div><p class="eyebrow">From the journal</p><h2>Notes along the way</h2></div><span class="section-index">A NEW BEGINNING</span></div>
+    <div class="feature-list">
+    {{#context.posts}}
+        {{> partials.blog.post}}
+    {{/context.posts}}
+    </div>
+</div>
+<section class="closing-note"><span aria-hidden="true">✳</span><p>Take what helps. Leave a little room for the rest.</p></section>
+{{/main}}
+{{/html}}

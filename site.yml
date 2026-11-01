@@ -1,0 +1,8 @@
+name: "The Swift Yogi"
+language: "en-US"
+description: "Finding a steadier rhythm between software, learning, and life."
+navigation:
+    - label: "Home"
+      url: "/"
+    - label: "Journal"
+      url: "/finding-your-balance/"

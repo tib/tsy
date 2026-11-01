@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html {{#site.language}}lang="{{.}}"{{/site.language}}>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f6ef">
+    <link rel="canonical" href="{{page.permalink}}">
+    <title>{{page.title}} — {{site.name}}</title>
+    <meta name="description" content="{{page.description}}">
+    <meta property="og:url" content="{{page.permalink}}"><meta property="og:title" content="{{page.title}} — {{site.name}}"><meta property="og:description" content="{{page.description}}">
+    <link rel="stylesheet" href="{{baseUrl}}/css/modern-normalize.css"><link rel="stylesheet" href="{{baseUrl}}/css/modern-base.css"><link rel="stylesheet" href="{{baseUrl}}/css/variables.css"><link rel="stylesheet" href="{{baseUrl}}/css/base.css"><link rel="stylesheet" href="{{baseUrl}}/css/grid.css"><link rel="stylesheet" href="{{baseUrl}}/css/navigation.css"><link rel="stylesheet" href="{{baseUrl}}/css/footer.css"><link rel="stylesheet" href="{{baseUrl}}/css/style.css">
+</head>
+<body><div id="site-container">{{> partials.navigation}}<main id="page-container">{{$main}}<p>No content.</p>{{/main}}</main>{{> partials.footer}}</div><script src="{{baseUrl}}/js/main.js" defer></script></body>
+</html>
