@@ -4,6 +4,10 @@ slug: one-small-refactor-at-a-time
 title: "One small refactor at a time"
 description: "A small, well-chosen refactor can make the next change easier without turning cleanup into a rewrite."
 publication: "2026-10-28 09:15:00"
+cover: "/assets/one-small-refactor-at-a-time/cover.webp"
+coverAlt: "Man working on a laptop at a desk"
+coverPhotographer: "Vitaly Gariev"
+coverSource: "https://unsplash.com/photos/E3GshXtONKQ"
 authors:
     - tibor-bodecs
 tags:

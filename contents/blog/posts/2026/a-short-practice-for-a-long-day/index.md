@@ -4,6 +4,10 @@ slug: a-short-practice-for-a-long-day
 title: "A short practice for a long day"
 description: "A brief sequence of breathing and movement can create a small transition between work and evening."
 publication: "2026-10-22 18:15:00"
+cover: "/assets/a-short-practice-for-a-long-day/cover.webp"
+coverAlt: "Woman meditating on a beach mat by the ocean"
+coverPhotographer: "Vadim Berg"
+coverSource: "https://unsplash.com/photos/vagP_ymUXUc"
 authors:
     - tibor-bodecs
 tags:

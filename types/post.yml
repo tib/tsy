@@ -13,6 +13,18 @@ properties:
         type: bool
         required: false
         defaultValue: false
+    cover:
+        type: string
+        required: false
+    coverAlt:
+        type: string
+        required: false
+    coverPhotographer:
+        type: string
+        required: false
+    coverSource:
+        type: string
+        required: false
 
 relations:
     authors:

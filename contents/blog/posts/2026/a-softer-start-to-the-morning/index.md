@@ -4,6 +4,10 @@ slug: a-softer-start-to-the-morning
 title: "A softer start to the morning"
 description: "A few quiet minutes before opening the laptop can change the shape of an entire day."
 publication: "2026-10-31 08:30:00"
+cover: "/assets/a-softer-start-to-the-morning/cover.webp"
+coverAlt: "A cup of coffee on a desk by the window"
+coverPhotographer: "Todd Jiang"
+coverSource: "https://unsplash.com/photos/3rWku5vMyNw"
 authors:
     - tibor-bodecs
 tags:

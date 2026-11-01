@@ -1,3 +1,26 @@
 <footer id="site-footer"><div class="footer-top"><a class="brand" href="/">
     <img class="brand-mark themed-logo" src="{{baseUrl}}/images/logo-new.png" alt="">
-    <span class="brand-name">The.<strong>Swift</strong>.Yogi</span></a><p>A practice in balance, one day at a time.</p><a href="/finding-your-balance/">Read the journal <span aria-hidden="true">↗</span></a></div><div class="footer-bottom"><small>© {{generation.formats.year}} Tibor Bödecs</small><small>Made with care, Swift &amp; <a href="https://github.com/binarybirds/toucan">Toucan</a>.</small></div></footer>
+    <span class="brand-name">The.<strong>Swift</strong>.Yogi</span></a><p>A practice in balance, one day at a time.</p><a href="/finding-your-balance/">Read the journal <span aria-hidden="true">↗</span></a></div>
+    <nav class="footer-sky-nav" aria-label="Choose a sky theme">
+        <div class="sky-nav-heading"><span class="eyebrow">Explore the day</span><span class="sky-nav-hint">Choose a point on the sky</span></div>
+        <div class="sky-theme-arc">
+            <svg class="sky-arc-line" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><path d="M24 82 Q500 -38 976 82"/></svg>
+            <div class="sky-theme-stops">
+                <button class="sky-theme-stop" type="button" data-sky-theme="night" data-sky-label="Starry night" aria-label="Preview the Starry night theme" aria-pressed="false" style="--arc-y:55px;--stop-color:#34486d"><span class="sky-theme-icon" aria-hidden="true">✦</span><span>Starry night</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="predawn" data-sky-label="Pre-dawn" aria-label="Preview the Pre-dawn theme" aria-pressed="false" style="--arc-y:32px;--stop-color:#514563"><span class="sky-theme-icon" aria-hidden="true">◒</span><span>Pre-dawn</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="dawn" data-sky-label="Dawn" aria-label="Preview the Dawn theme" aria-pressed="false" style="--arc-y:14px;--stop-color:#efad93"><span class="sky-theme-icon" aria-hidden="true">☼</span><span>Dawn</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="morning" data-sky-label="Summer morning" aria-label="Preview the Summer morning theme" aria-pressed="false" style="--arc-y:4px;--stop-color:#a9d6e5"><span class="sky-theme-icon" aria-hidden="true">🌤</span><span>Summer morning</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="noon" data-sky-label="Sunny noon" aria-label="Preview the Sunny noon theme" aria-pressed="false" style="--arc-y:4px;--stop-color:#84c9e0"><span class="sky-theme-icon" aria-hidden="true">☀</span><span>Sunny noon</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="afternoon" data-sky-label="Afternoon" aria-label="Preview the Afternoon theme" aria-pressed="false" style="--arc-y:14px;--stop-color:#a4cfce"><span class="sky-theme-icon" aria-hidden="true">◉</span><span>Afternoon</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="golden" data-sky-label="Golden hour" aria-label="Preview the Golden hour theme" aria-pressed="false" style="--arc-y:32px;--stop-color:#f0bf9b"><span class="sky-theme-icon" aria-hidden="true">🌇</span><span>Golden hour</span></button>
+                <button class="sky-theme-stop" type="button" data-sky-theme="dusk" data-sky-label="Dusk" aria-label="Preview the Dusk theme" aria-pressed="false" style="--arc-y:55px;--stop-color:#603b60"><span class="sky-theme-icon" aria-hidden="true">☾</span><span>Dusk</span></button>
+            </div>
+        </div>
+        <div class="sky-simulation-control">
+            <button id="sky-simulation-toggle" class="sky-simulation-toggle" type="button" aria-pressed="false" aria-label="Start a one-day sky simulation"><span class="simulation-play-icon" aria-hidden="true">▶</span><span id="sky-simulation-label">Simulate one day</span></button>
+            <output id="sky-time-label" aria-live="polite">--:--</output>
+            <span id="sky-context" class="sr-only" role="status" aria-live="polite"></span>
+        </div>
+    </nav>
+    <div class="footer-bottom"><small>© {{generation.formats.year}} Tibor Bödecs</small><small>Made with care, Swift &amp; <a href="https://github.com/binarybirds/toucan">Toucan</a>.</small></div>
+</footer>

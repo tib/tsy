@@ -4,6 +4,10 @@ slug: what-a-compiler-can-teach-us-about-patience
 title: "What a compiler can teach us about patience"
 description: "Compiler errors are interruptions, but they can also be precise invitations to slow down and look again."
 publication: "2026-10-30 09:00:00"
+cover: "/assets/what-a-compiler-can-teach-us-about-patience/cover.webp"
+coverAlt: "Laptop and phone on a desk with coding software open"
+coverPhotographer: "Bayu Syaits"
+coverSource: "https://unsplash.com/photos/oYzjGQ7LCVE"
 authors:
     - tibor-bodecs
 tags:

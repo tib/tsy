@@ -1,4 +1,5 @@
 <div class="card{{#featured}} featured{{/featured}}">
+    {{#cover}}<a class="card-cover" href="{{permalink}}"><img src="{{.}}" alt="{{coverAlt}}" loading="lazy"></a>{{/cover}}
     {{#featured}}<span class="card-badge">Featured</span>{{/featured}}
     <div class="meta">
         <time datetime="{{publication.iso8601}}">{{publication.date.long}}</time>

@@ -4,6 +4,10 @@ slug: naming-things-with-care
 title: "Naming things with care"
 description: "A clear name cannot explain an entire system, but it can make the next reader feel less alone."
 publication: "2026-10-24 09:30:00"
+cover: "/assets/naming-things-with-care/cover.webp"
+coverAlt: "Person writing in notebook next to laptop and coffee"
+coverPhotographer: "Esra Afşar"
+coverSource: "https://unsplash.com/photos/vDNMEn8VCfU"
 authors:
     - tibor-bodecs
 tags:

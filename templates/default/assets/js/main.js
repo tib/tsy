@@ -1,14 +1,20 @@
-const skyTimeSlider = document.querySelector("#sky-time");
 const skyTimeLabel = document.querySelector("#sky-time-label");
 const skyContext = document.querySelector("#sky-context");
-const liveTimeButton = document.querySelector("#sky-live-time");
-const skyPaletteSelect = document.querySelector("#sky-palette");
+const simulationButton = document.querySelector("#sky-simulation-toggle");
+const simulationLabel = document.querySelector("#sky-simulation-label");
+const simulationIcon = document.querySelector(".simulation-play-icon");
+const skyThemeButtons = [...document.querySelectorAll("[data-sky-theme]")];
 const rootStyle = document.documentElement.style;
 const solarLocationKey = "tsy-solar-location";
 
 let solarLocation = readSolarLocation();
 let previewMinutes = null;
 let selectedPaletteKey = null;
+let simulationRunning = false;
+let simulationStartedAt = 0;
+let simulationElapsed = 0;
+let simulationFrame = null;
+const simulatedDayDuration = 120_000;
 
 const palettes = {
     night: {
@@ -111,6 +117,7 @@ function localMinutes(date) {
 }
 
 function formatMinutes(value) {
+    if (value >= 1440) return "24:00";
     const minutes = Math.floor(value) % 1440;
     return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }
@@ -233,19 +240,14 @@ function updateSky() {
     const isLiveSky = previewMinutes === null && selectedPaletteKey === null;
     applyPalette(palette, isLiveSky ? 200 : null);
 
-    if (skyTimeSlider) {
-        skyTimeSlider.value = String(Math.floor(time));
-        skyTimeSlider.setAttribute("aria-valuetext", `${formatMinutes(time)} local time`);
-        skyTimeSlider.style.setProperty("--progress", `${(time / 1439) * 100}%`);
-    }
     if (skyTimeLabel) skyTimeLabel.textContent = formatMinutes(time);
-    if (skyPaletteSelect && skyPaletteSelect.value !== (selectedPaletteKey || "")) {
-        skyPaletteSelect.value = selectedPaletteKey || "";
+    for (const button of skyThemeButtons) {
+        button.setAttribute("aria-pressed", String(button.dataset.skyTheme === selectedPaletteKey));
     }
 
     if (skyContext) {
         const context = selectedPaletteKey
-            ? `Previewing the ${skyPaletteSelect?.selectedOptions[0]?.textContent || selectedPaletteKey} palette. Press Now to return to your local sky.`
+            ? `Previewing the ${skyThemeButtons.find((button) => button.dataset.skyTheme === selectedPaletteKey)?.dataset.skyLabel || selectedPaletteKey} palette. Press Now to return to your local sky.`
             : events.polarDay
             ? "Polar daylight colors based on your current date and location."
             : events.polarNight
@@ -255,30 +257,75 @@ function updateSky() {
     }
 }
 
-skyTimeSlider?.addEventListener("input", (event) => {
-    previewMinutes = Number(event.currentTarget.value);
+function resetSimulationButton() {
+    if (!simulationButton || !simulationLabel) return;
+    simulationButton.setAttribute("aria-pressed", "false");
+    simulationButton.setAttribute("aria-label", "Start a one-day sky simulation");
+    simulationLabel.textContent = simulationElapsed >= simulatedDayDuration
+        ? "Replay the day"
+        : simulationElapsed > 0 ? "Resume simulation" : "Simulate one day";
+    if (simulationIcon) simulationIcon.textContent = "▶";
+}
+
+function pauseDaySimulation() {
+    if (!simulationRunning) return;
+    simulationElapsed += performance.now() - simulationStartedAt;
+    simulationRunning = false;
+    if (simulationFrame !== null) cancelAnimationFrame(simulationFrame);
+    simulationFrame = null;
+    resetSimulationButton();
+}
+
+function advanceDaySimulation(timestamp) {
+    if (!simulationRunning) return;
+    const elapsed = simulationElapsed + timestamp - simulationStartedAt;
+    const progress = Math.min(1, elapsed / simulatedDayDuration);
+    previewMinutes = progress * 1440;
     selectedPaletteKey = null;
     updateSky();
+
+    if (progress >= 1) {
+        simulationRunning = false;
+        simulationElapsed = simulatedDayDuration;
+        simulationFrame = null;
+        resetSimulationButton();
+        return;
+    }
+    simulationFrame = requestAnimationFrame(advanceDaySimulation);
+}
+
+simulationButton?.addEventListener("click", () => {
+    if (simulationRunning) {
+        pauseDaySimulation();
+        return;
+    }
+
+    if (simulationElapsed >= simulatedDayDuration) {
+        simulationElapsed = 0;
+        previewMinutes = 0;
+    }
+    selectedPaletteKey = null;
+    simulationStartedAt = performance.now();
+    simulationRunning = true;
+    simulationButton.setAttribute("aria-pressed", "true");
+    simulationButton.setAttribute("aria-label", "Pause the one-day sky simulation");
+    if (simulationLabel) simulationLabel.textContent = "Pause simulation";
+    if (simulationIcon) simulationIcon.textContent = "Ⅱ";
+    updateSky();
+    simulationFrame = requestAnimationFrame(advanceDaySimulation);
 });
 
-skyPaletteSelect?.addEventListener("change", (event) => {
-    selectedPaletteKey = event.currentTarget.value || null;
+skyThemeButtons.forEach((button) => button.addEventListener("click", () => {
+    pauseDaySimulation();
+    simulationElapsed = 0;
+    resetSimulationButton();
+    selectedPaletteKey = button.dataset.skyTheme;
     if (selectedPaletteKey) {
         const matchingStop = paletteStops(new Date()).find((stop) => stop.palette === palettes[selectedPaletteKey]);
         previewMinutes = matchingStop?.time ?? localMinutes(new Date());
-        if (skyContext) skyContext.textContent = `Previewing the ${event.currentTarget.selectedOptions[0].textContent} palette. Press Now to return to your local sky.`;
-    } else {
-        previewMinutes = null;
     }
     updateSky();
-});
-
-liveTimeButton?.addEventListener("click", () => {
-    previewMinutes = null;
-    selectedPaletteKey = null;
-    updateSky();
-    skyTimeSlider?.focus();
-});
+}));
 
 solarLocation = readSolarLocation();
 updateSky();

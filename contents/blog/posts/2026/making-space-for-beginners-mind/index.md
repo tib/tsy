@@ -4,6 +4,10 @@ slug: making-space-for-beginners-mind
 title: "Making space for a beginner's mind"
 description: "Starting yoga as an adult means meeting familiar movements with fresh questions and a little humility."
 publication: "2026-10-26 10:00:00"
+cover: "/assets/making-space-for-beginners-mind/cover.webp"
+coverAlt: "Woman meditating in a lotus pose on a yoga mat"
+coverPhotographer: "Margaret Young"
+coverSource: "https://unsplash.com/photos/VenoeRobp6M"
 authors:
     - tibor-bodecs
 tags:

@@ -4,6 +4,10 @@ slug: building-a-habit-that-can-bend
 title: "Building a habit that can bend"
 description: "The routines I keep are the ones that leave room for travel, low-energy days, and unexpected changes."
 publication: "2026-10-21 08:00:00"
+cover: "/assets/building-a-habit-that-can-bend/cover.webp"
+coverAlt: "Person walking on a forest path at sunrise"
+coverPhotographer: "Ewan Z"
+coverSource: "https://unsplash.com/photos/rwiUgwQyi5s"
 authors:
     - tibor-bodecs
 tags:

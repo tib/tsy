@@ -4,6 +4,10 @@ slug: finding-the-edge-of-effort
 title: "Finding the edge of effort"
 description: "Yoga keeps reminding me that useful effort has a boundary, and that noticing it is part of the work."
 publication: "2026-10-29 08:00:00"
+cover: "/assets/finding-the-edge-of-effort/cover.webp"
+coverAlt: "Woman stretching on a yoga mat indoors"
+coverPhotographer: "Margaret Young"
+coverSource: "https://unsplash.com/photos/0VLjZ6aYFZ8"
 authors:
     - tibor-bodecs
 tags:

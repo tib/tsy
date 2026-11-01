@@ -5,6 +5,10 @@ title: "Finding your balance"
 description: "What happens when a software developer makes room for a new practice, and learns to slow down enough to notice the change."
 publication: "2026-11-01 09:00:00"
 featured: true
+cover: "/assets/finding-your-balance/cover.webp"
+coverAlt: "Woman meditating peacefully on a yoga mat outdoors"
+coverPhotographer: "Vitaly Gariev"
+coverSource: "https://unsplash.com/photos/ahSmXcBtej4"
 authors:
     - tibor-bodecs
 tags:

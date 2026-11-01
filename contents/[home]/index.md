@@ -8,7 +8,8 @@ views:
 
 <section class="hero">
     <div class="hero-copy">
-        <p class="eyebrow"><span class="sun-mark" aria-hidden="true">✳</span> A practice in balance</p>
+        <span class="hero-star sun-mark" aria-hidden="true">✳</span>
+        <p class="eyebrow">A practice in balance</p>
         <img class="hero-wordmark themed-logo" src="/images/logo-new.png" alt="The Swift Yogi mark">
         <h1><em>The.Swift.Yogi</em></h1>
         <p class="hero-intro">I’m Tibor — a software developer, Swift educator, and yoga teacher in the making. Here I’m exploring what it means to do thoughtful work and make room for a fuller life.</p>

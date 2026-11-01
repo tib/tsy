@@ -2,26 +2,4 @@
     <nav aria-label="Main navigation">
         <div class="menu-items">{{#site.navigation}}<a href="{{url}}">{{label}}</a>{{/site.navigation}}</div>
     </nav>
-    <div class="theme-control" aria-label="Explore the colors of the day">
-        <div class="theme-control-top">
-            <output id="sky-time-label" for="sky-time" aria-live="polite">--:--</output>
-            <button id="sky-live-time" type="button" aria-label="Return to current local time" title="Return to current local time">Now</button>
-        </div>
-        <input id="sky-time" type="range" min="0" max="1439" step="1" value="720" aria-label="Explore sky colors by local time" title="Drag to explore colors from dawn to night">
-        <label class="sky-palette-select" for="sky-palette">
-            <span>Try a time of day</span>
-            <select id="sky-palette" aria-label="Preview a time of day">
-                <option value="">Live sky</option>
-                <option value="night">Starry night</option>
-                <option value="predawn">Pre-dawn</option>
-                <option value="dawn">Dawn</option>
-                <option value="morning">Summer morning</option>
-                <option value="noon">Sunny noon</option>
-                <option value="afternoon">Afternoon</option>
-                <option value="golden">Golden hour</option>
-                <option value="dusk">Dusk</option>
-            </select>
-        </label>
-        <span id="sky-context" class="sr-only" role="status" aria-live="polite"></span>
-    </div>
 </header>

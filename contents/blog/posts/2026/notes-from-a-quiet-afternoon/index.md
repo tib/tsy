@@ -4,6 +4,10 @@ slug: notes-from-a-quiet-afternoon
 title: "Notes from a quiet afternoon"
 description: "An unplanned hour without a screen helped me remember that creative attention needs room to wander."
 publication: "2026-10-25 16:00:00"
+cover: "/assets/notes-from-a-quiet-afternoon/cover.webp"
+coverAlt: "A person holding tea and reading a book"
+coverPhotographer: "Kelly Sikkema"
+coverSource: "https://unsplash.com/photos/qLJ-M7EyoaY"
 authors:
     - tibor-bodecs
 tags:

@@ -2,7 +2,7 @@
 {{$main}}
 <article class="article-shell">
     <header class="article-header"><span class="article-star sun-mark" aria-hidden="true">✳</span><div class="meta article-meta-top"><time datetime="{{page.publication.iso8601}}">{{page.publication.date.long}}</time><span>·</span>{{#page.contents.readingTime}}<span>{{.}} min read</span>{{/page.contents.readingTime}}</div><h1>{{page.title}}</h1><p class="article-deck">{{page.description}}</p></header>
-    <div class="article-illustration" aria-hidden="true"><div class="article-sun"></div><span>inhale</span><span>exhale</span><i></i></div>
+    {{#page.cover}}<figure class="article-cover"><img src="{{.}}" alt="{{page.coverAlt}}"><figcaption>Photo by <a href="{{page.coverSource}}" target="_blank" rel="noopener noreferrer">{{page.coverPhotographer}}</a> on <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a></figcaption></figure>{{/page.cover}}
     <div class="article-body">{{& page.contents.html}}</div>
     <footer class="article-end"><span aria-hidden="true">✳</span><p>Thank you for sharing this little pause.</p><a class="button button-light" href="/">Back to the beginning <span aria-hidden="true">↗</span></a></footer>
 </article>

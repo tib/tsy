@@ -4,6 +4,10 @@ slug: the-walk-between-two-ideas
 title: "The walk between two ideas"
 description: "Stepping away from a stuck problem often gives the mind a quieter place to make a connection."
 publication: "2026-10-27 07:45:00"
+cover: "/assets/the-walk-between-two-ideas/cover.webp"
+coverAlt: "Woman walking on a forest path during autumn"
+coverPhotographer: "Hanna Lazar"
+coverSource: "https://unsplash.com/photos/2Ic37kLL5VM"
 authors:
     - tibor-bodecs
 tags:
