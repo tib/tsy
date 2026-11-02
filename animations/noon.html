@@ -1,17 +1,18 @@
 <!doctype html>
-<html lang="en" data-sky-scene="golden">
+<html lang="en" data-sky-scene="noon">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f0bf9b">
-  <title>Golden Hour — Animation Preview</title>
+  <meta name="theme-color" content="#84c9e0">
+  <title>Sunny Noon — Animation Preview</title>
   <style>
-:root{--sky-start:#f0bf9b;--sky-end:#f8dba5;--theme-text:#302522;--theme-accent:#57301f}
+:root{--sky-start:#84c9e0;--sky-end:#f5fbf5;--theme-text:#26383d;--theme-accent:#2e5048}
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0}
 body{min-height:100vh;min-height:100svh;overflow:hidden;background:linear-gradient(180deg,var(--sky-start),var(--sky-end))}
 .nature-scene{position:relative;inset:auto;width:100%;height:100vh;height:100svh;overflow:visible;opacity:1;pointer-events:none}
 .nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
+.butterfly-canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
 /* Slow natural motifs shift with the selected time of day. */
 .nature-scene{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:0;overflow:visible;pointer-events:none;opacity:.38;transition:opacity 1.2s ease}
 .nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
@@ -161,240 +162,285 @@ html[data-sky-scene="night"] .scene-night,html[data-sky-scene="predawn"] .scene-
 @keyframes firefly-dart{0%,62%,100%{opacity:0;transform:translate(0,0)}64%{opacity:.9}66%{opacity:1;transform:translate(150px,-90px)}68%{opacity:1;transform:translate(330px,24px)}70%{opacity:0;transform:translate(430px,-68px)}}
 @media(prefers-reduced-motion:reduce){.nature-scene *{animation:none!important;scroll-behavior:auto!important}}
 
-.nature-scene .hero-sunset-birds{position:static;top:auto;left:auto;width:100%;height:100%;transform:none;display:block;opacity:1;visibility:visible;pointer-events:none}
-.swallow-canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
-.header-bird-flock{fill:none;stroke:var(--theme-text);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;animation:header-bird-cross 13s ease-in-out infinite alternate}
-.flock-second{animation-duration:16s;animation-delay:-8s;opacity:.82}
-@keyframes header-bird-cross{0%{transform:translateX(-28px)}42%{transform:translateX(10px)}46%{transform:translateX(92px)}50%{transform:translateX(34px)}75%{transform:translateX(48px)}100%{transform:translateX(32px)}}
-
 .nature-scene{position:relative;top:auto;left:auto;width:100%;height:100vh;height:100svh;opacity:1;z-index:auto}</style>
 </head>
 <body>
-  <main class="nature-scene" aria-label="Golden Hour animation">
-    <svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
-      <defs><linearGradient id="shooting-star-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff8df" stop-opacity="0" /><stop offset="100%" stop-color="#fff" stop-opacity=".95" /></linearGradient><g id="dawn-bee"><g class="buzzing-fly"><path class="fly-vibration" d="M-22-5Q-16 0-22 5M-28-9Q-18 0-28 9M22-5Q16 0 22 5M28-9Q18 0 28 9" /><path class="bee-wings" d="M-2-2Q-9-12-13-6Q-13-2-3 1M0-2Q2-13 8-9Q10-5 3 0" /><ellipse class="bee-abdomen" cx="-4" cy="0" rx="5.2" ry="3.1" /><path class="bee-stripes" d="M-6-2.3v4.6M-2-3v6" /><ellipse class="bee-thorax" cx="2.5" cy="0" rx="3.2" ry="3.5" /><circle class="bee-head" cx="7" cy="0" r="2.7" /><path class="bee-antennae" d="M7-2q1-4 3-4m-1 4q3-3 5-2" /><path class="bee-legs" d="m-3 2-4 4m3-5-5 1m10 1 1 4m2-5 4 3" /></g></g><g id="singing-cicada"><path class="cicada-echo" d="M-7-4Q-15 0-7 4M7-4Q15 0 7 4M-8-9Q-21 0-8 9M8-9Q21 0 8 9" /><path class="cicada-wings" d="M-2-2Q-8-17-18-10Q-18-2-4 3M2-2Q8-17 18-10Q18-2 4 3" /><ellipse class="cicada-body" cy="0" rx="3.5" ry="8" /><circle class="cicada-body" cy="-8" r="3" /><path class="cicada-legs" d="M-2 4-8 9m10-5 6 5m-7-13-4-6m6 6 4-6" /></g></defs>
-            
-      <g class="scene-golden"></g>
-    </svg>
-    <canvas class="swallow-canvas" aria-label="A flock of swallows circling across the golden hour sky"></canvas>
+  <main class="nature-scene" aria-label="Sunny Noon animation">
+
+    <canvas class="butterfly-canvas" aria-label="Butterflies fluttering through the midday sky"></canvas>
   </main>
   <script>
     (() => {
-      const canvas = document.querySelector(".swallow-canvas");
+      const canvas = document.querySelector(".butterfly-canvas");
       const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
       const width = 1440;
       const height = 900;
-      const color = getComputedStyle(document.documentElement).getPropertyValue("--theme-muted").trim() || "#49362e";
       const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const random = (min, max) => min + Math.random() * (max - min);
       const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
       const angleDifference = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
       const wrap = (value, min, max) => value < min ? max - ((min - value) % (max - min)) : value > max ? min + ((value - max) % (max - min)) : value;
-      const flock = Array.from({ length: 14 }, (_, index) => ({
-        x: width * .5 + random(-145, 145),
-        y: height * .38 + random(-105, 105),
+      const palettes = [
+        { fore: ["rgba(244,133,131,.94)", "rgba(255,191,112,.9)"], hind: ["rgba(255,194,111,.92)", "rgba(245,145,160,.88)"] },
+        { fore: ["rgba(105,146,232,.94)", "rgba(183,135,225,.9)"], hind: ["rgba(181,135,225,.92)", "rgba(116,191,225,.88)"] },
+        { fore: ["rgba(235,116,164,.94)", "rgba(255,176,141,.9)"], hind: ["rgba(255,185,137,.92)", "rgba(236,132,178,.88)"] },
+        { fore: ["rgba(97,183,151,.94)", "rgba(212,199,104,.9)"], hind: ["rgba(210,198,105,.92)", "rgba(109,190,161,.88)"] },
+      ];
+      function makeWingSprite(colors, forewing) {
+        const sprite = document.createElement("canvas");
+        sprite.width = 80;
+        sprite.height = 64;
+        const spriteContext = sprite.getContext("2d");
+        spriteContext.scale(2, 2);
+        spriteContext.translate(16, 4);
+        const gradient = spriteContext.createLinearGradient(-8, 3, 18, 19);
+        gradient.addColorStop(0, colors[0]);
+        gradient.addColorStop(.58, colors[1]);
+        gradient.addColorStop(1, colors[0]);
+        spriteContext.fillStyle = gradient;
+        spriteContext.beginPath();
+        if (forewing) {
+          spriteContext.moveTo(0, 0);
+          spriteContext.bezierCurveTo(3, 4, 10, 3, 14, 7);
+          spriteContext.bezierCurveTo(23, 14, 20, 24, 10, 23);
+          spriteContext.bezierCurveTo(2, 22, -2, 10, 0, 0);
+        } else {
+          spriteContext.moveTo(0, 0);
+          spriteContext.bezierCurveTo(-4, 4, -11, 5, -12, 11);
+          spriteContext.bezierCurveTo(-13, 19, -4, 23, 2, 18);
+          spriteContext.bezierCurveTo(6, 13, 4, 5, 0, 0);
+        }
+        spriteContext.closePath();
+        spriteContext.fill();
+        return sprite;
+      }
+      const wingSprites = palettes.map((palette) => [
+        makeWingSprite(palette.fore, true),
+        makeWingSprite(palette.hind, false),
+      ]);
+      const butterflies = Array.from({ length: 7 }, (_, index) => ({
+        x: 120 + index % 4 * 370 + random(-70, 70),
+        y: 160 + Math.floor(index / 4) * 500 + random(-80, 80),
         heading: random(0, Math.PI * 2),
-        speed: random(82, 112),
-        cruiseSpeed: random(105, 145),
-        scale: random(.62, .96),
+        speed: random(38, 54),
+        cruiseSpeed: random(50, 86),
+        scale: random(.7, .96),
         phase: random(0, Math.PI * 2),
-        dartIn: random(3, 8),
-        dartFor: 0,
-        dartHeading: 0,
-        dartSpeed: 0,
-        targetX: random(100, width - 100),
-        targetY: random(100, height - 100),
-        targetIn: random(3, 6),
+        targetX: random(60, width - 60),
+        targetY: random(60, height - 60),
+        targetIn: random(4, 7),
+        paletteIndex: index % palettes.length,
+        palette: palettes[index % palettes.length],
+        flapCycle: random(2.3, 3.1),
+        flapBeats: Math.random() < .45 ? 1 : 2,
+        isChaser: false,
+        isChased: false,
       }));
-      const leader = flock[0];
-      let pointer = null;
       let previousTime = 0;
       let elapsed = 0;
-
-      function pointerFlee(bird, radius) {
-        if (!pointer) return null;
-        const dx = bird.x - pointer.x;
-        const dy = bird.y - pointer.y;
-        const distance = Math.hypot(dx, dy);
-        if (distance >= radius) return null;
-        const angle = distance > .001 ? Math.atan2(dy, dx) : bird.phase;
-        return { x: Math.cos(angle), y: Math.sin(angle), strength: 1 - distance / radius };
-      }
+      let chaserIndex = 0;
+      let chaseTargetIndex = 1;
+      let chaseTime = random(7, 11);
+      butterflies[chaserIndex].isChaser = true;
+      butterflies[chaseTargetIndex].isChased = true;
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         canvas.width = Math.round(rect.width * dpr);
         canvas.height = Math.round(rect.height * dpr);
         ctx.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
       }
 
-      function moveLeader(dt) {
-        leader.targetIn -= dt;
-        if (leader.targetIn <= 0) {
-          leader.targetX = random(70, width - 70);
-          leader.targetY = random(65, height - 65);
-          leader.targetIn = random(3.2, 6.2);
-        }
-        const flee = pointerFlee(leader, 230);
-        const aim = flee
-          ? Math.atan2(flee.y, flee.x)
-          : Math.atan2(leader.targetY - leader.y, leader.targetX - leader.x);
-        const weave = flee ? 0 : Math.sin(elapsed * 2.8 + leader.phase) * .16;
-        const turnRate = flee ? 5 : 2.1;
-        leader.heading += clamp(angleDifference(leader.heading, aim + weave), -turnRate * dt, turnRate * dt);
-        leader.dartIn -= dt;
-        let targetSpeed = leader.cruiseSpeed + (flee ? flee.strength * 155 : 0);
-        if (flee) leader.dartFor = 0;
-        if (!flee && leader.dartIn <= 0 && leader.dartFor <= 0) {
-          leader.dartFor = random(.12, .2);
-          leader.dartHeading = leader.heading + random(-.75, .75);
-          leader.dartSpeed = random(175, 235);
-          leader.dartIn = random(4, 8);
-        }
-        if (leader.dartFor > 0) {
-          leader.dartFor -= dt;
-          leader.heading += angleDifference(leader.heading, leader.dartHeading) * Math.min(1, dt * 7);
-          targetSpeed = leader.dartSpeed;
-        }
-        leader.speed += (targetSpeed - leader.speed) * Math.min(1, dt * 2.8);
-        leader.x += Math.cos(leader.heading) * leader.speed * dt;
-        leader.y += Math.sin(leader.heading) * leader.speed * dt;
-        leader.x = wrap(leader.x, -60, width + 60);
-        leader.y = wrap(leader.y, -60, height + 60);
+      function updateChase(dt) {
+        chaseTime -= dt;
+        const chaser = butterflies[chaserIndex];
+        const target = butterflies[chaseTargetIndex];
+        const distance = Math.hypot(target.x - chaser.x, target.y - chaser.y);
+        if (chaseTime > 0 && distance > 66) return;
+
+        chaserIndex = Math.floor(Math.random() * butterflies.length);
+        do {
+          chaseTargetIndex = Math.floor(Math.random() * butterflies.length);
+        } while (chaseTargetIndex === chaserIndex);
+        butterflies.forEach((butterfly, index) => {
+          butterfly.isChaser = index === chaserIndex;
+          butterfly.isChased = index === chaseTargetIndex;
+        });
+        chaseTime = random(7, 11);
       }
 
-      function moveFollowers(dt) {
-        const snapshots = flock.map((bird) => ({ x: bird.x, y: bird.y, heading: bird.heading, speed: bird.speed }));
-        for (let index = 1; index < flock.length; index += 1) {
-          const bird = flock[index];
-          const own = snapshots[index];
-          let centerX = 0;
-          let centerY = 0;
-          let alignX = 0;
-          let alignY = 0;
-          let separationX = 0;
-          let separationY = 0;
-          let neighbors = 0;
-          for (let otherIndex = 0; otherIndex < snapshots.length; otherIndex += 1) {
-            if (otherIndex === index) continue;
-            const other = snapshots[otherIndex];
-            const dx = other.x - own.x;
-            const dy = other.y - own.y;
-            const distance = Math.hypot(dx, dy);
-            if (distance < 220) {
-              centerX += other.x;
-              centerY += other.y;
-              alignX += Math.cos(other.heading);
-              alignY += Math.sin(other.heading);
-              neighbors += 1;
-            }
-            if (distance > 0 && distance < 48) {
-              const strength = (48 - distance) / 48;
-              separationX -= dx / distance * strength;
-              separationY -= dy / distance * strength;
-            }
+      function moveButterfly(butterfly, dt) {
+        butterfly.targetIn -= dt;
+        if (butterfly.targetIn <= 0) {
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            butterfly.targetX = random(50, width - 50);
+            butterfly.targetY = random(55, height - 55);
+            if (Math.hypot(butterfly.targetX - butterfly.x, butterfly.targetY - butterfly.y) > 390) break;
           }
+          butterfly.targetIn = random(4, 7);
+        }
+        let aimX = butterfly.targetX;
+        let aimY = butterfly.targetY;
+        let chaseDistance = Infinity;
+        let chaseHeading = 0;
+        if (butterfly.isChaser) {
+          const target = butterflies[chaseTargetIndex];
+          aimX = target.x + Math.cos(target.heading) * target.speed * .6;
+          aimY = target.y + Math.sin(target.heading) * target.speed * .6;
+        } else if (butterfly.isChased) {
+          const chaser = butterflies[chaserIndex];
+          const awayX = butterfly.x - chaser.x;
+          const awayY = butterfly.y - chaser.y;
+          chaseDistance = Math.hypot(awayX, awayY);
+          chaseHeading = chaseDistance > 1 ? Math.atan2(awayY, awayX) : butterfly.heading + Math.PI;
+        }
+        let desired = Math.atan2(aimY - butterfly.y, aimX - butterfly.x);
+        const flee = butterfly.isChased ? clamp((250 - chaseDistance) / 250, 0, 1) : 0;
+        if (flee > 0) desired += angleDifference(desired, chaseHeading) * flee;
+        let separationX = 0;
+        let separationY = 0;
+        for (const other of butterflies) {
+          if (other === butterfly) continue;
+          const dx = butterfly.x - other.x;
+          const dy = butterfly.y - other.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance > 0 && distance < 90) {
+            const weight = (90 - distance) / 90;
+            separationX += dx / distance * weight;
+            separationY += dy / distance * weight;
+          }
+        }
+        const flightCycle = (elapsed + butterfly.phase) % butterfly.flapCycle;
+        const burstLength = butterfly.flapBeats * .28;
+        const flapping = flightCycle < burstLength;
+        const weave = Math.sin(elapsed * (flapping ? 2.4 : .75) + butterfly.phase) * (flapping ? .12 : .035);
+        const turnRate = (flapping ? 1.4 : .48) + flee * 1.8 + (butterfly.isChaser ? .28 : 0);
+        let steerHeading = desired + weave;
+        if (Math.hypot(separationX, separationY) > .01) {
+          const separationHeading = Math.atan2(separationY, separationX);
+          steerHeading += angleDifference(steerHeading, separationHeading) * Math.min(1, Math.hypot(separationX, separationY) * 1.8);
+        }
+        butterfly.heading += clamp(angleDifference(butterfly.heading, steerHeading), -turnRate * dt, turnRate * dt);
+        const approach = clamp(Math.hypot(aimX - butterfly.x, aimY - butterfly.y) / 180, .45, 1);
+        const playBoost = butterfly.isChaser ? 1.22 : 1 + flee * .65;
+        const targetSpeed = butterfly.cruiseSpeed * approach * (flapping ? 1.65 : .72) * playBoost;
+        butterfly.speed += (targetSpeed - butterfly.speed) * Math.min(1, dt * (flapping ? 4.8 : .72));
+        const flutter = flapping
+          ? Math.sin(elapsed * 3.2 + butterfly.phase) * 5
+          : Math.sin(elapsed * 1.1 + butterfly.phase) * 1.8;
+        butterfly.x += (Math.cos(butterfly.heading) * butterfly.speed - Math.sin(butterfly.heading) * flutter + separationX * 40) * dt;
+        butterfly.y += (Math.sin(butterfly.heading) * butterfly.speed + Math.cos(butterfly.heading) * flutter + separationY * 40) * dt;
+        butterfly.x = wrap(butterfly.x, -60, width + 60);
+        butterfly.y = wrap(butterfly.y, -60, height + 60);
+      }
 
-          let steerX = Math.cos(leader.heading) * .55;
-          let steerY = Math.sin(leader.heading) * .55;
-          if (neighbors > 0) {
-            centerX = centerX / neighbors - own.x;
-            centerY = centerY / neighbors - own.y;
-            const centerLength = Math.hypot(centerX, centerY) || 1;
-            const alignLength = Math.hypot(alignX, alignY) || 1;
-            steerX += centerX / centerLength * .9 + alignX / alignLength * .75;
-            steerY += centerY / centerLength * .9 + alignY / alignLength * .75;
+      function keepButterfliesApart() {
+        const minDistance = 46;
+        for (let pass = 0; pass < 2; pass += 1) {
+          for (let first = 0; first < butterflies.length; first += 1) {
+            for (let second = first + 1; second < butterflies.length; second += 1) {
+              const a = butterflies[first];
+              const b = butterflies[second];
+              let dx = b.x - a.x;
+              let dy = b.y - a.y;
+              let distance = Math.hypot(dx, dy);
+              if (distance >= minDistance) continue;
+              if (distance < .01) {
+                const angle = random(0, Math.PI * 2);
+                dx = Math.cos(angle);
+                dy = Math.sin(angle);
+                distance = 1;
+              }
+              const overlap = (minDistance - distance) * .5;
+              const nx = dx / distance;
+              const ny = dy / distance;
+              a.x = wrap(a.x - nx * overlap, -60, width + 60);
+              a.y = wrap(a.y - ny * overlap, -60, height + 60);
+              b.x = wrap(b.x + nx * overlap, -60, width + 60);
+              b.y = wrap(b.y + ny * overlap, -60, height + 60);
+            }
           }
-          steerX += separationX * 1.6;
-          steerY += separationY * 1.6;
-          const flee = pointerFlee(bird, 205);
-          if (flee) {
-            steerX += flee.x * (2.2 + flee.strength * 2.2);
-            steerY += flee.y * (2.2 + flee.strength * 2.2);
-          }
-          const desired = Math.atan2(steerY, steerX) + Math.sin(elapsed * 2.2 + bird.phase) * .12;
-          const turnRate = flee ? 4.8 : 2.7;
-          bird.heading += clamp(angleDifference(bird.heading, desired), -turnRate * dt, turnRate * dt);
-
-          bird.dartIn -= dt;
-          let targetSpeed = bird.cruiseSpeed + (flee ? flee.strength * 125 : 0);
-          if (flee) bird.dartFor = 0;
-          if (!flee && bird.dartIn <= 0 && bird.dartFor <= 0) {
-            bird.dartFor = random(.1, .18);
-            bird.dartHeading = bird.heading + random(-.8, .8);
-            bird.dartSpeed = random(165, 225);
-            bird.dartIn = random(4.5, 9);
-          }
-          if (bird.dartFor > 0) {
-            bird.dartFor -= dt;
-            bird.heading += angleDifference(bird.heading, bird.dartHeading) * Math.min(1, dt * 8);
-            targetSpeed = bird.dartSpeed;
-          }
-          bird.speed += (targetSpeed - bird.speed) * Math.min(1, dt * 3.2);
-          const flutter = Math.sin(elapsed * 3.5 + bird.phase) * 5;
-          bird.x += (Math.cos(bird.heading) * bird.speed - Math.sin(bird.heading) * flutter + separationX * 65) * dt;
-          bird.y += (Math.sin(bird.heading) * bird.speed + Math.cos(bird.heading) * flutter + separationY * 65) * dt;
-          bird.x = wrap(bird.x, -60, width + 60);
-          bird.y = wrap(bird.y, -60, height + 60);
         }
       }
 
-      function drawSwallow(bird, time) {
+      function drawButterfly(butterfly, time) {
         ctx.save();
-        ctx.translate(bird.x, bird.y);
-        ctx.rotate(bird.heading);
-        ctx.scale(bird.scale, bird.scale);
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 1;
-        const wingBeat = Math.sin(time * 8 + bird.phase);
-        ctx.beginPath();
-        ctx.moveTo(-7, -1.6);
-        ctx.bezierCurveTo(-13, -3.7, -20, -3.4, -25, -3.2);
-        ctx.quadraticCurveTo(-19, -.9, -10, .5);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(-7, 1.6);
-        ctx.bezierCurveTo(-13, 3.7, -20, 3.4, -25, 3.2);
-        ctx.quadraticCurveTo(-19, .9, -10, -.5);
-        ctx.closePath();
-        ctx.fill();
-
+        ctx.translate(butterfly.x, butterfly.y);
+        ctx.rotate(butterfly.heading);
+        ctx.scale(butterfly.scale, butterfly.scale);
+        const cycleTime = (time + butterfly.phase) % butterfly.flapCycle;
+        const beatLength = .28;
+        const burstLength = butterfly.flapBeats * beatLength;
+        let wingOpen = 1;
+        if (cycleTime < burstLength) {
+          const beatProgress = (cycleTime % beatLength) / beatLength;
+          wingOpen = beatProgress < .42
+            ? 1 - (beatProgress / .42) * .72
+            : .28 + ((beatProgress - .42) / .58) * .72;
+        }
+        const bodyColor = "#655b50";
         for (const side of [-1, 1]) {
-          ctx.save();
-          ctx.translate(1, side * 1.2);
-          ctx.rotate(side * (.08 + wingBeat * .16));
-          ctx.beginPath();
-          ctx.moveTo(1, side * 2.2);
-          ctx.bezierCurveTo(-2, side * 7, -7, side * 16, -24, side * 20);
-          ctx.bezierCurveTo(-13, side * 13, -9, side * 3, -4, side * 1);
-          ctx.quadraticCurveTo(-1, side * .5, 1, side * 2.2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
+          for (const [rootX, forewing] of [[1.2, true], [-2, false]]) {
+            ctx.save();
+            ctx.translate(rootX, side * 1.3);
+            ctx.scale(1, side * wingOpen);
+            ctx.rotate(side * (1 - wingOpen) * .12);
+            ctx.globalAlpha = .92;
+            ctx.drawImage(wingSprites[butterfly.paletteIndex][forewing ? 0 : 1], -16, -4, 40, 32);
+            ctx.restore();
+          }
         }
 
+        ctx.globalAlpha = .94;
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
-        ctx.moveTo(10, 0);
-        ctx.bezierCurveTo(5, -3.1, -1, -4.2, -8, -3.8);
-        ctx.bezierCurveTo(-14, -3.4, -19, -1.5, -21, -.5);
-        ctx.bezierCurveTo(-15, -.1, -10, .4, -7, .8);
-        ctx.bezierCurveTo(-12, 1.5, -16, 2.5, -18, 3.3);
-        ctx.bezierCurveTo(-10, 4.8, -1, 4, 6, 2.8);
-        ctx.quadraticCurveTo(10, 1.5, 10, 0);
-        ctx.closePath();
+        ctx.ellipse(-2.8, 0, 4.6, 2.35, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(7.3, 0, 2.1, 0, Math.PI * 2);
+        ctx.ellipse(.5, 0, 3.1, 2.9, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
-        ctx.moveTo(8.3, -.8);
-        ctx.lineTo(11.2, 0);
-        ctx.lineTo(8.3, .8);
-        ctx.closePath();
+        ctx.arc(5.2, 0, 2.55, 0, Math.PI * 2);
         ctx.fill();
 
+        ctx.strokeStyle = bodyColor;
+        ctx.lineWidth = .78;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(6.1, -.9);
+        ctx.quadraticCurveTo(8, -3.4, 10.5, -3);
+        ctx.moveTo(6.1, .9);
+        ctx.quadraticCurveTo(8, 3.4, 10.5, 3);
+        ctx.stroke();
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.arc(10.5, -3, .62, 0, Math.PI * 2);
+        ctx.arc(10.5, 3, .62, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#fff6e7";
+        ctx.beginPath();
+        ctx.arc(5.1, -.85, .64, 0, Math.PI * 2);
+        ctx.arc(5.1, .85, .64, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.arc(5.28, -.85, .3, 0, Math.PI * 2);
+        ctx.arc(5.28, .85, .3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(228,132,135,.58)";
+        ctx.beginPath();
+        ctx.ellipse(6.35, -1.7, .52, .3, 0, 0, Math.PI * 2);
+        ctx.ellipse(6.35, 1.7, .52, .3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = bodyColor;
+        ctx.lineWidth = .55;
+        ctx.beginPath();
+        ctx.moveTo(7.2, -.22);
+        ctx.quadraticCurveTo(7.65, .12, 8.1, -.22);
+        ctx.stroke();
         ctx.restore();
       }
 
@@ -404,21 +450,14 @@ html[data-sky-scene="night"] .scene-night,html[data-sky-scene="predawn"] .scene-
         elapsed += dt;
         ctx.clearRect(0, 0, width, height);
         if (!reducedMotion) {
-          moveLeader(dt);
-          moveFollowers(dt);
+          updateChase(dt);
+          for (const butterfly of butterflies) moveButterfly(butterfly, dt);
+          keepButterfliesApart();
         }
-        for (const bird of flock) drawSwallow(bird, elapsed);
+        for (const butterfly of butterflies) drawButterfly(butterfly, elapsed);
         if (!reducedMotion) requestAnimationFrame(frame);
       }
 
-      window.addEventListener("pointermove", (event) => {
-        const rect = canvas.getBoundingClientRect();
-        pointer = {
-          x: (event.clientX - rect.left) / rect.width * width,
-          y: (event.clientY - rect.top) / rect.height * height,
-        };
-      }, { passive: true });
-      window.addEventListener("pointerleave", () => { pointer = null; }, { passive: true });
       window.addEventListener("resize", resize, { passive: true });
       resize();
       frame();

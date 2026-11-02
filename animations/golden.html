@@ -1,18 +1,17 @@
 <!doctype html>
-<html lang="en" data-sky-scene="afternoon">
+<html lang="en" data-sky-scene="golden">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#a4cfce">
-  <title>Afternoon — Animation Preview</title>
+  <meta name="theme-color" content="#f0bf9b">
+  <title>Golden Hour — Animation Preview</title>
   <style>
-:root{--sky-start:#a4cfce;--sky-end:#f4edce;--theme-text:#303b36;--theme-accent:#394b3c}
+:root{--sky-start:#f0bf9b;--sky-end:#f8dba5;--theme-text:#302522;--theme-accent:#57301f}
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0}
 body{min-height:100vh;min-height:100svh;overflow:hidden;background:linear-gradient(180deg,var(--sky-start),var(--sky-end))}
 .nature-scene{position:relative;inset:auto;width:100%;height:100vh;height:100svh;overflow:visible;opacity:1;pointer-events:none}
 .nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
-.leaf-canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
 /* Slow natural motifs shift with the selected time of day. */
 .nature-scene{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:0;overflow:visible;pointer-events:none;opacity:.38;transition:opacity 1.2s ease}
 .nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
@@ -162,195 +161,236 @@ html[data-sky-scene="night"] .scene-night,html[data-sky-scene="predawn"] .scene-
 @keyframes firefly-dart{0%,62%,100%{opacity:0;transform:translate(0,0)}64%{opacity:.9}66%{opacity:1;transform:translate(150px,-90px)}68%{opacity:1;transform:translate(330px,24px)}70%{opacity:0;transform:translate(430px,-68px)}}
 @media(prefers-reduced-motion:reduce){.nature-scene *{animation:none!important;scroll-behavior:auto!important}}
 
+.nature-scene .hero-sunset-birds{position:static;top:auto;left:auto;width:100%;height:100%;transform:none;display:block;opacity:1;visibility:visible;pointer-events:none}
+.swallow-canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
+.header-bird-flock{fill:none;stroke:var(--theme-text);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;animation:header-bird-cross 13s ease-in-out infinite alternate}
+.flock-second{animation-duration:16s;animation-delay:-8s;opacity:.82}
+@keyframes header-bird-cross{0%{transform:translateX(-28px)}42%{transform:translateX(10px)}46%{transform:translateX(92px)}50%{transform:translateX(34px)}75%{transform:translateX(48px)}100%{transform:translateX(32px)}}
+
 .nature-scene{position:relative;top:auto;left:auto;width:100%;height:100vh;height:100svh;opacity:1;z-index:auto}</style>
 </head>
 <body>
-  <main class="nature-scene" aria-label="Afternoon animation">
-    <svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
-      <defs><linearGradient id="shooting-star-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff8df" stop-opacity="0" /><stop offset="100%" stop-color="#fff" stop-opacity=".95" /></linearGradient><g id="dawn-bee"><g class="buzzing-fly"><path class="fly-vibration" d="M-22-5Q-16 0-22 5M-28-9Q-18 0-28 9M22-5Q16 0 22 5M28-9Q18 0 28 9" /><path class="bee-wings" d="M-2-2Q-9-12-13-6Q-13-2-3 1M0-2Q2-13 8-9Q10-5 3 0" /><ellipse class="bee-abdomen" cx="-4" cy="0" rx="5.2" ry="3.1" /><path class="bee-stripes" d="M-6-2.3v4.6M-2-3v6" /><ellipse class="bee-thorax" cx="2.5" cy="0" rx="3.2" ry="3.5" /><circle class="bee-head" cx="7" cy="0" r="2.7" /><path class="bee-antennae" d="M7-2q1-4 3-4m-1 4q3-3 5-2" /><path class="bee-legs" d="m-3 2-4 4m3-5-5 1m10 1 1 4m2-5 4 3" /></g></g><g id="singing-cicada"><path class="cicada-echo" d="M-7-4Q-15 0-7 4M7-4Q15 0 7 4M-8-9Q-21 0-8 9M8-9Q21 0 8 9" /><path class="cicada-wings" d="M-2-2Q-8-17-18-10Q-18-2-4 3M2-2Q8-17 18-10Q18-2 4 3" /><ellipse class="cicada-body" cy="0" rx="3.5" ry="8" /><circle class="cicada-body" cy="-8" r="3" /><path class="cicada-legs" d="M-2 4-8 9m10-5 6 5m-7-13-4-6m6 6 4-6" /></g></defs>
-            
-      <g class="scene-afternoon">
-                <path class="leaf-branch" d="M0 1116q145-36 290 0t290 0 290 0 290 0 280 0" />
-                <g class="static-leaf" transform="translate(145 1080)"><path class="simple-leaf" d="M0-22C13-14 13 8 0 22-13 8-13-14 0-22Z" /><path class="leaf-vein" d="M0-18v36" /></g>
-                <g class="static-leaf" transform="translate(1170 1085) rotate(32)"><path class="simple-leaf" d="M0-22C13-14 13 8 0 22-13 8-13-14 0-22Z" /><path class="leaf-vein" d="M0-18v36" /></g>
-            </g>
-            
-    </svg>
-    <canvas class="leaf-canvas" aria-label="Leaves swept across the afternoon sky by the wind"></canvas>
+  <main class="nature-scene" aria-label="Golden Hour animation">
+
+    <canvas class="swallow-canvas" aria-label="A flock of swallows circling across the golden hour sky"></canvas>
   </main>
   <script>
     (() => {
-      const canvas = document.querySelector(".leaf-canvas");
+      const canvas = document.querySelector(".swallow-canvas");
       const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
       const width = 1440;
       const height = 900;
+      const color = getComputedStyle(document.documentElement).getPropertyValue("--theme-muted").trim() || "#49362e";
       const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const color = getComputedStyle(document.documentElement).getPropertyValue("--theme-text").trim() || "#303b36";
-      const pointer = { x: 0, y: 0, active: false };
       const random = (min, max) => min + Math.random() * (max - min);
       const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
       const angleDifference = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
-      const leafColors = ["#b6a45f", "#c3a46b", "#9fae75", "#c78f63", "#a9b77b"];
-      const leaves = Array.from({ length: 20 }, (_, index) => ({
-        x: random(0, width),
-        y: random(-30, height + 30),
-        vx: random(-35, 35),
-        vy: random(-15, 15),
-        size: index < 6 ? random(.35, .58) : random(.58, 1.12),
-        angle: random(0, Math.PI * 2),
-        spin: random(-.55, .55),
+      const wrap = (value, min, max) => value < min ? max - ((min - value) % (max - min)) : value > max ? min + ((value - max) % (max - min)) : value;
+      const flock = Array.from({ length: 14 }, (_, index) => ({
+        x: width * .5 + random(-145, 145),
+        y: height * .38 + random(-105, 105),
+        heading: random(0, Math.PI * 2),
+        speed: random(82, 112),
+        cruiseSpeed: random(105, 145),
+        scale: random(.62, .96),
         phase: random(0, Math.PI * 2),
-        color: leafColors[Math.floor(Math.random() * leafColors.length)],
+        dartIn: random(3, 8),
+        dartFor: 0,
+        dartHeading: 0,
+        dartSpeed: 0,
+        targetX: random(100, width - 100),
+        targetY: random(100, height - 100),
+        targetIn: random(3, 6),
       }));
-      const wind = {
-        angle: random(-.35, .35),
-        targetAngle: random(-.6, .6),
-        directionIn: random(10, 18),
-        nextGustIn: random(1.8, 4.2),
-        gustRemaining: 0,
-        gustDuration: 0,
-        gustStrength: 0,
-        vortexIn: random(6, 12),
-        vortexRemaining: 0,
-        vortexDuration: 0,
-        vortexStrength: 0,
-        vortexDirection: 1,
-        vortexX: 0,
-        vortexY: 0,
-        vortexRadius: 0,
-      };
+      const leader = flock[0];
+      let pointer = null;
       let previousTime = 0;
       let elapsed = 0;
 
+      function pointerFlee(bird, radius) {
+        if (!pointer) return null;
+        const dx = bird.x - pointer.x;
+        const dy = bird.y - pointer.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance >= radius) return null;
+        const angle = distance > .001 ? Math.atan2(dy, dx) : bird.phase;
+        return { x: Math.cos(angle), y: Math.sin(angle), strength: 1 - distance / radius };
+      }
+
       function resize() {
         const rect = canvas.getBoundingClientRect();
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         canvas.width = Math.round(rect.width * dpr);
         canvas.height = Math.round(rect.height * dpr);
         ctx.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
       }
 
-      function updateWind(dt) {
-        wind.directionIn -= dt;
-        if (wind.directionIn <= 0) {
-          wind.targetAngle = random(-Math.PI, Math.PI);
-          wind.directionIn = random(10, 20);
+      function moveLeader(dt) {
+        leader.targetIn -= dt;
+        if (leader.targetIn <= 0) {
+          leader.targetX = random(70, width - 70);
+          leader.targetY = random(65, height - 65);
+          leader.targetIn = random(3.2, 6.2);
         }
-        wind.angle += angleDifference(wind.angle, wind.targetAngle) * Math.min(1, dt * .24);
-        if (wind.gustRemaining > 0) {
-          wind.gustRemaining -= dt;
-        } else {
-          wind.nextGustIn -= dt;
-          if (wind.nextGustIn <= 0) {
-            wind.gustDuration = random(1.4, 2.8);
-            wind.gustRemaining = wind.gustDuration;
-            wind.gustStrength = random(75, 145);
-            wind.nextGustIn = random(3.2, 7);
-          }
+        const flee = pointerFlee(leader, 230);
+        const aim = flee
+          ? Math.atan2(flee.y, flee.x)
+          : Math.atan2(leader.targetY - leader.y, leader.targetX - leader.x);
+        const weave = flee ? 0 : Math.sin(elapsed * 2.8 + leader.phase) * .16;
+        const turnRate = flee ? 5 : 2.1;
+        leader.heading += clamp(angleDifference(leader.heading, aim + weave), -turnRate * dt, turnRate * dt);
+        leader.dartIn -= dt;
+        let targetSpeed = leader.cruiseSpeed + (flee ? flee.strength * 155 : 0);
+        if (flee) leader.dartFor = 0;
+        if (!flee && leader.dartIn <= 0 && leader.dartFor <= 0) {
+          leader.dartFor = random(.12, .2);
+          leader.dartHeading = leader.heading + random(-.75, .75);
+          leader.dartSpeed = random(175, 235);
+          leader.dartIn = random(4, 8);
         }
-        const gustProgress = wind.gustDuration > 0
-          ? 1 - wind.gustRemaining / wind.gustDuration
-          : 0;
-        const gust = wind.gustRemaining > 0 ? Math.sin(gustProgress * Math.PI) * wind.gustStrength : 0;
+        if (leader.dartFor > 0) {
+          leader.dartFor -= dt;
+          leader.heading += angleDifference(leader.heading, leader.dartHeading) * Math.min(1, dt * 7);
+          targetSpeed = leader.dartSpeed;
+        }
+        leader.speed += (targetSpeed - leader.speed) * Math.min(1, dt * 2.8);
+        leader.x += Math.cos(leader.heading) * leader.speed * dt;
+        leader.y += Math.sin(leader.heading) * leader.speed * dt;
+        leader.x = wrap(leader.x, -60, width + 60);
+        leader.y = wrap(leader.y, -60, height + 60);
+      }
 
-        if (wind.vortexRemaining > 0) {
-          wind.vortexRemaining -= dt;
-        } else {
-          wind.vortexIn -= dt;
-          if (wind.vortexIn <= 0) {
-            wind.vortexX = random(120, width - 120);
-            wind.vortexY = random(100, height - 100);
-            wind.vortexRadius = random(110, 210);
-            wind.vortexStrength = random(90, 165);
-            wind.vortexDirection = Math.random() < .5 ? -1 : 1;
-            wind.vortexDuration = random(2.1, 3.8);
-            wind.vortexRemaining = wind.vortexDuration;
-            wind.vortexIn = random(8, 16);
-          }
-        }
-        const vortexProgress = wind.vortexDuration > 0 ? 1 - wind.vortexRemaining / wind.vortexDuration : 0;
-        const vortexEnvelope = wind.vortexRemaining > 0 ? Math.sin(vortexProgress * Math.PI) : 0;
-        const windSpeed = 34 + gust;
-        const windX = Math.cos(wind.angle) * windSpeed;
-        const windY = Math.sin(wind.angle) * windSpeed;
-
-        for (const leaf of leaves) {
-          const sizeWind = 1.35 - leaf.size * .62;
-          const response = clamp(1.65 - leaf.size * .65, .75, 1.5);
-          const turbulence = (Math.sin(elapsed * 1.35 + leaf.phase) * 22 + Math.sin(elapsed * 2.6 + leaf.phase * 1.7) * 11) * sizeWind;
-          let avoidX = 0;
-          let avoidY = 0;
-          if (pointer.active) {
-            const awayX = leaf.x - pointer.x;
-            const awayY = leaf.y - pointer.y;
-            const distance = Math.hypot(awayX, awayY);
-            if (distance < 165) {
-              const strength = Math.pow(1 - distance / 165, 2);
-              const awayAngle = distance > 1 ? Math.atan2(awayY, awayX) : leaf.phase;
-              avoidX = Math.cos(awayAngle) * strength * 220;
-              avoidY = Math.sin(awayAngle) * strength * 220;
-            }
-          }
-          let vortexX = 0;
-          let vortexY = 0;
-          let vortexSpin = 0;
-          if (vortexEnvelope > 0) {
-            const dx = leaf.x - wind.vortexX;
-            const dy = leaf.y - wind.vortexY;
+      function moveFollowers(dt) {
+        const snapshots = flock.map((bird) => ({ x: bird.x, y: bird.y, heading: bird.heading, speed: bird.speed }));
+        for (let index = 1; index < flock.length; index += 1) {
+          const bird = flock[index];
+          const own = snapshots[index];
+          let centerX = 0;
+          let centerY = 0;
+          let alignX = 0;
+          let alignY = 0;
+          let separationX = 0;
+          let separationY = 0;
+          let neighbors = 0;
+          for (let otherIndex = 0; otherIndex < snapshots.length; otherIndex += 1) {
+            if (otherIndex === index) continue;
+            const other = snapshots[otherIndex];
+            const dx = other.x - own.x;
+            const dy = other.y - own.y;
             const distance = Math.hypot(dx, dy);
-            if (distance > 0 && distance < wind.vortexRadius) {
-              const weight = Math.pow(1 - distance / wind.vortexRadius, 2) * vortexEnvelope;
-              const swirl = wind.vortexDirection * wind.vortexStrength * weight * sizeWind;
-              vortexX = (-dy / distance) * swirl - (dx / distance) * swirl * .14;
-              vortexY = (dx / distance) * swirl - (dy / distance) * swirl * .14;
-              vortexSpin = wind.vortexDirection * weight * 1.4;
+            if (distance < 220) {
+              centerX += other.x;
+              centerY += other.y;
+              alignX += Math.cos(other.heading);
+              alignY += Math.sin(other.heading);
+              neighbors += 1;
+            }
+            if (distance > 0 && distance < 48) {
+              const strength = (48 - distance) / 48;
+              separationX -= dx / distance * strength;
+              separationY -= dy / distance * strength;
             }
           }
-          const targetVx = windX * sizeWind + turbulence + avoidX + vortexX;
-          const updraft = -gust * (.12 + .06 * Math.sin(elapsed * 2 + leaf.phase));
-          const targetVy = (windY + Math.sin(elapsed * .95 + leaf.phase) * 17 + updraft) * sizeWind + avoidY + vortexY;
-          leaf.vx += (targetVx - leaf.vx) * Math.min(1, dt * (1.1 + gust * .008) * response);
-          leaf.vy += (targetVy - leaf.vy) * Math.min(1, dt * 1.25 * response);
-          leaf.x += leaf.vx * dt;
-          leaf.y += leaf.vy * dt;
-          leaf.angle += (leaf.spin / leaf.size + gust * .0025 + turbulence * .0015 + vortexSpin) * dt;
-          if (leaf.x < -90) leaf.x = width + 90;
-          else if (leaf.x > width + 90) leaf.x = -90;
-          if (leaf.y < -100) leaf.y = height + 100;
-          else if (leaf.y > height + 100) leaf.y = -100;
+
+          let steerX = Math.cos(leader.heading) * .55;
+          let steerY = Math.sin(leader.heading) * .55;
+          if (neighbors > 0) {
+            centerX = centerX / neighbors - own.x;
+            centerY = centerY / neighbors - own.y;
+            const centerLength = Math.hypot(centerX, centerY) || 1;
+            const alignLength = Math.hypot(alignX, alignY) || 1;
+            steerX += centerX / centerLength * .9 + alignX / alignLength * .75;
+            steerY += centerY / centerLength * .9 + alignY / alignLength * .75;
+          }
+          steerX += separationX * 1.6;
+          steerY += separationY * 1.6;
+          const flee = pointerFlee(bird, 205);
+          if (flee) {
+            steerX += flee.x * (2.2 + flee.strength * 2.2);
+            steerY += flee.y * (2.2 + flee.strength * 2.2);
+          }
+          const desired = Math.atan2(steerY, steerX) + Math.sin(elapsed * 2.2 + bird.phase) * .12;
+          const turnRate = flee ? 4.8 : 2.7;
+          bird.heading += clamp(angleDifference(bird.heading, desired), -turnRate * dt, turnRate * dt);
+
+          bird.dartIn -= dt;
+          let targetSpeed = bird.cruiseSpeed + (flee ? flee.strength * 125 : 0);
+          if (flee) bird.dartFor = 0;
+          if (!flee && bird.dartIn <= 0 && bird.dartFor <= 0) {
+            bird.dartFor = random(.1, .18);
+            bird.dartHeading = bird.heading + random(-.8, .8);
+            bird.dartSpeed = random(165, 225);
+            bird.dartIn = random(4.5, 9);
+          }
+          if (bird.dartFor > 0) {
+            bird.dartFor -= dt;
+            bird.heading += angleDifference(bird.heading, bird.dartHeading) * Math.min(1, dt * 8);
+            targetSpeed = bird.dartSpeed;
+          }
+          bird.speed += (targetSpeed - bird.speed) * Math.min(1, dt * 3.2);
+          const flutter = Math.sin(elapsed * 3.5 + bird.phase) * 5;
+          bird.x += (Math.cos(bird.heading) * bird.speed - Math.sin(bird.heading) * flutter + separationX * 65) * dt;
+          bird.y += (Math.sin(bird.heading) * bird.speed + Math.cos(bird.heading) * flutter + separationY * 65) * dt;
+          bird.x = wrap(bird.x, -60, width + 60);
+          bird.y = wrap(bird.y, -60, height + 60);
         }
       }
 
-      function drawLeaf(leaf) {
+      function drawSwallow(bird, time) {
         ctx.save();
-        ctx.translate(leaf.x, leaf.y);
-        ctx.rotate(leaf.angle);
-        ctx.scale(leaf.size, leaf.size);
-        ctx.globalAlpha = .5;
-        ctx.fillStyle = leaf.color;
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.35;
-        ctx.lineJoin = "round";
+        ctx.translate(bird.x, bird.y);
+        ctx.rotate(bird.heading);
+        ctx.scale(bird.scale, bird.scale);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 1;
+        const wingBeat = Math.sin(time * 8 + bird.phase);
         ctx.beginPath();
-        ctx.moveTo(0, -22);
-        ctx.bezierCurveTo(13, -14, 13, 8, 0, 22);
-        ctx.bezierCurveTo(-13, 8, -13, -14, 0, -22);
+        ctx.moveTo(-7, -1.6);
+        ctx.bezierCurveTo(-13, -3.7, -20, -3.4, -25, -3.2);
+        ctx.quadraticCurveTo(-19, -.9, -10, .5);
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
-        ctx.globalAlpha = .55;
-        ctx.lineWidth = 1;
-        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(0, -18);
-        ctx.lineTo(0, 18);
-        ctx.moveTo(0, -4);
-        ctx.lineTo(7, -11);
-        ctx.moveTo(0, 3);
-        ctx.lineTo(-7, -5);
-        ctx.moveTo(0, 9);
-        ctx.lineTo(6, 3);
-        ctx.stroke();
+        ctx.moveTo(-7, 1.6);
+        ctx.bezierCurveTo(-13, 3.7, -20, 3.4, -25, 3.2);
+        ctx.quadraticCurveTo(-19, .9, -10, -.5);
+        ctx.closePath();
+        ctx.fill();
+
+        for (const side of [-1, 1]) {
+          ctx.save();
+          ctx.translate(1, side * 1.2);
+          ctx.rotate(side * (.08 + wingBeat * .16));
+          ctx.beginPath();
+          ctx.moveTo(1, side * 2.2);
+          ctx.bezierCurveTo(-2, side * 7, -7, side * 16, -24, side * 20);
+          ctx.bezierCurveTo(-13, side * 13, -9, side * 3, -4, side * 1);
+          ctx.quadraticCurveTo(-1, side * .5, 1, side * 2.2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.bezierCurveTo(5, -3.1, -1, -4.2, -8, -3.8);
+        ctx.bezierCurveTo(-14, -3.4, -19, -1.5, -21, -.5);
+        ctx.bezierCurveTo(-15, -.1, -10, .4, -7, .8);
+        ctx.bezierCurveTo(-12, 1.5, -16, 2.5, -18, 3.3);
+        ctx.bezierCurveTo(-10, 4.8, -1, 4, 6, 2.8);
+        ctx.quadraticCurveTo(10, 1.5, 10, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(7.3, 0, 2.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(8.3, -.8);
+        ctx.lineTo(11.2, 0);
+        ctx.lineTo(8.3, .8);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.restore();
       }
 
@@ -359,20 +399,22 @@ html[data-sky-scene="night"] .scene-night,html[data-sky-scene="predawn"] .scene-
         previousTime = timestamp;
         elapsed += dt;
         ctx.clearRect(0, 0, width, height);
-        if (!reducedMotion) updateWind(dt);
-        for (const leaf of leaves) drawLeaf(leaf);
+        if (!reducedMotion) {
+          moveLeader(dt);
+          moveFollowers(dt);
+        }
+        for (const bird of flock) drawSwallow(bird, elapsed);
         if (!reducedMotion) requestAnimationFrame(frame);
       }
 
-      function updatePointer(event) {
+      window.addEventListener("pointermove", (event) => {
         const rect = canvas.getBoundingClientRect();
-        pointer.x = (event.clientX - rect.left) / rect.width * width;
-        pointer.y = (event.clientY - rect.top) / rect.height * height;
-        pointer.active = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
-      }
-
-      window.addEventListener("pointermove", updatePointer, { passive: true });
-      window.addEventListener("pointerout", (event) => { if (!event.relatedTarget) pointer.active = false; }, { passive: true });
+        pointer = {
+          x: (event.clientX - rect.left) / rect.width * width,
+          y: (event.clientY - rect.top) / rect.height * height,
+        };
+      }, { passive: true });
+      window.addEventListener("pointerleave", () => { pointer = null; }, { passive: true });
       window.addEventListener("resize", resize, { passive: true });
       resize();
       frame();

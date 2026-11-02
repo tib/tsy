@@ -67,7 +67,7 @@
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
-        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
         canvas.width = Math.round(rect.width * ratio);
         canvas.height = Math.round(rect.height * ratio);
         context.setTransform(canvas.width / logicalWidth, 0, 0, canvas.height / logicalHeight, 0, 0);
@@ -173,8 +173,12 @@
       }
 
       function recordBeeTrail(bee, dt) {
-        for (const dash of bee.trail) dash.age += dt;
-        bee.trail = bee.trail.filter((dash) => dash.age < 1.5);
+        let liveDashes = 0;
+        for (const dash of bee.trail) {
+          dash.age += dt;
+          if (dash.age < 1.5) bee.trail[liveDashes++] = dash;
+        }
+        bee.trail.length = liveDashes;
 
         const current = {
           x: bee.x - Math.cos(bee.heading) * 10.5,
