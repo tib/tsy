@@ -7,9 +7,7 @@ views:
 ---
 
 <section class="hero">
-    <canvas class="hero-sunset-birds" aria-hidden="true"></canvas>
     <div class="hero-copy">
-        <span class="hero-star sun-mark" aria-hidden="true">✳</span>
         <p class="eyebrow">A practice in balance</p>
         <img class="hero-wordmark themed-logo" src="/images/logo-new.png" alt="The Swift Yogi mark">
         <h1><em>The.Swift.Yogi</em></h1>
