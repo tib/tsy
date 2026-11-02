@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en" data-sky-scene="afternoon">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#a4cfce">
+  <title>Afternoon — Animation Preview</title>
+  <style>
+:root{--sky-start:#a4cfce;--sky-end:#f4edce;--theme-text:#303b36;--theme-accent:#394b3c}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0}
+body{min-height:100vh;min-height:100svh;overflow:hidden;background:linear-gradient(180deg,var(--sky-start),var(--sky-end))}
+.nature-scene{position:relative;inset:auto;width:100%;height:100vh;height:100svh;overflow:visible;opacity:1;pointer-events:none}
+.nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
+.leaf-canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
+/* Slow natural motifs shift with the selected time of day. */
+.nature-scene{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:0;overflow:visible;pointer-events:none;opacity:.38;transition:opacity 1.2s ease}
+.nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
+.nature-scene g[class^="scene-"]{opacity:0;transition:opacity 1.8s ease}
+html[data-sky-scene="night"] .scene-night,html[data-sky-scene="predawn"] .scene-predawn,html[data-sky-scene="dawn"] .scene-dawn,html[data-sky-scene="morning"] .scene-morning,html[data-sky-scene="noon"] .scene-noon,html[data-sky-scene="afternoon"] .scene-afternoon,html[data-sky-scene="dusk"] .scene-dusk{opacity:1}
+.nature-scene circle,.nature-scene path,.nature-scene ellipse{vector-effect:non-scaling-stroke}
+.night-stars,.predawn-stars{fill:#fff4ce}
+.constellation circle{fill:#fff;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #dceaff);animation:star-twinkle 2.4s ease-in-out infinite alternate}
+.night-stars circle,.predawn-stars circle{filter:drop-shadow(0 0 5px #d6eaff) drop-shadow(0 0 10px #9bc9ff88);animation:star-twinkle 1.8s ease-in-out infinite alternate,star-glow 1.8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+.night-stars circle:nth-child(2n),.predawn-stars circle:nth-child(2n){animation-delay:1.3s}
+.night-stars circle:nth-child(3n){animation-delay:2.1s}
+.night-stars circle:nth-child(4n){animation-duration:2.2s}
+.night-stars circle:nth-child(5n){animation-delay:-.7s;animation-duration:1.9s}
+.night-stars circle:nth-child(7n){animation-delay:1.8s;filter:drop-shadow(0 0 10px #fff) drop-shadow(0 0 24px #9bc9ff)}
+.night-stars>circle:nth-of-type(8n+1),.predawn-stars>circle:nth-of-type(8n+1),.star-cluster circle:nth-child(5n+1){fill:#c6d9ff}
+.night-stars>circle:nth-of-type(8n+2),.predawn-stars>circle:nth-of-type(8n+2),.star-cluster circle:nth-child(5n+2){fill:#f0f3fb}
+.night-stars>circle:nth-of-type(8n+3),.predawn-stars>circle:nth-of-type(8n+3),.star-cluster circle:nth-child(5n+3){fill:#fff0d0}
+.night-stars>circle:nth-of-type(8n+4),.predawn-stars>circle:nth-of-type(8n+4),.star-cluster circle:nth-child(5n+4){fill:#f5f6ff}
+.night-stars>circle:nth-of-type(8n+5),.predawn-stars>circle:nth-of-type(8n+5),.star-cluster circle:nth-child(5n+5){fill:#a9c6ff}
+.night-stars>circle:nth-of-type(8n+6),.predawn-stars>circle:nth-of-type(8n+6){fill:#fff6e7}
+.night-stars>circle:nth-of-type(8n+7),.predawn-stars>circle:nth-of-type(8n+7){fill:#ffc187}
+.night-stars>circle:nth-of-type(8n+8),.predawn-stars>circle:nth-of-type(8n+8){fill:#e8efff}
+.constellation-ursa circle:nth-child(1){fill:#bdd3ff}.constellation-ursa circle:nth-child(2){fill:#eef3ff}.constellation-ursa circle:nth-child(3){fill:#f9f4e6}.constellation-ursa circle:nth-child(4){fill:#e5edff}.constellation-ursa circle:nth-child(5){fill:#d9e5ff}.constellation-ursa circle:nth-child(6){fill:#f4f1e9}.constellation-ursa circle:nth-child(7){fill:#ffd08d}
+.constellation-orion circle:nth-child(1){fill:#f08a76}.constellation-orion circle:nth-child(2){fill:#c7dcff}.constellation-orion circle:nth-child(3){fill:#ccddff}.constellation-orion circle:nth-child(4){fill:#edf3ff}.constellation-orion circle:nth-child(5){fill:#bed5ff}.constellation-orion circle:nth-child(6){fill:#d5e3ff}.constellation-orion circle:nth-child(7){fill:#9fbeff}
+.shooting-star{fill:#fff;stroke:none;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #b9d8ff);opacity:0;transform-box:fill-box;transform-origin:center;animation:shooting-star 20s linear infinite}
+.shooting-star-tail-glow{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;opacity:.24;filter:blur(2px)}
+.shooting-star-tail{fill:url(#shooting-star-gradient);stroke:none;opacity:.96}
+.shooting-star-two{animation-name:shooting-star-reverse;animation-delay:-9s;animation-duration:27s}
+.predawn-shooting-star{animation-name:shooting-star-reverse;animation-delay:-7s;animation-duration:23s}
+.predawn-bat-flight{transform-box:fill-box;transform-origin:center;animation:bat-drift 20s ease-in-out infinite}
+.predawn-bat-ears,.predawn-bat-wing,.predawn-bat-head{fill:var(--theme-text)}
+.predawn-bat-wing{transform-box:fill-box;animation:bat-wing-flap .22s ease-in-out infinite alternate}
+.bat-wing-left{transform-origin:right center}
+.bat-wing-right{transform-origin:left center}
+.bat-echo{fill:none;stroke:var(--theme-text);stroke-width:1.3;opacity:0;transform-box:fill-box;transform-origin:center;animation:bat-echo 1.2s linear infinite}
+.echo-two{animation-delay:.04s}
+.predawn-bat-head{fill:var(--theme-text)}
+.predawn-bugs .bug-body,.predawn-bugs .bug-wing{fill:var(--theme-text)}
+.predawn-bugs .bug-wing{transform-box:fill-box;transform-origin:center;animation:bug-wing-flap .18s ease-in-out infinite alternate}
+.bug-dot{opacity:.72;animation:bug-drift 4.6s ease-in-out infinite alternate}
+.predawn-bugs .bug-dot:nth-child(4){animation-delay:-1.8s}
+.predawn-bugs .bug-dot:nth-child(5){animation-delay:-3.1s}
+.bug-caught{opacity:.82;animation:bug-caught 2.3s ease-in-out infinite}
+.bug-two{animation-delay:1.15s}
+.footer-celestial{position:relative;height:180px;overflow:visible}
+.footer-celestial svg{display:block;width:100%;height:100%;overflow:visible}
+.celestial-orbit{fill:none;stroke:var(--theme-text);stroke-width:1.4;opacity:.2}
+.celestial-body{transition:opacity .5s linear}
+.celestial-sun{fill:#f4c58f}
+.sun-halo{opacity:.16}
+.sun-disc{opacity:1}
+.celestial-moon{fill:#e6e9ce}
+.morning-stems{fill:none;stroke:var(--theme-text);stroke-width:1.8;stroke-linecap:round;opacity:.8}
+.morning-flower-head{fill:none;stroke:var(--theme-text);stroke-width:1.7;opacity:.86}
+.buzzing-fly{fill:none;stroke:var(--theme-text);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fly-body{fill:var(--theme-text);stroke:none}
+.fly-legs{fill:none;stroke:var(--theme-text);stroke-width:1.2;stroke-linecap:round}
+.fly-vibration{fill:none;stroke:var(--theme-text);stroke-width:1.05;stroke-linecap:round;opacity:.28;animation:fly-buzz .2s steps(2,end) infinite alternate}
+.fly-wings{fill:none;stroke:var(--theme-text);stroke-width:1.45;stroke-linecap:round;transform-box:fill-box;transform-origin:center;animation:fly-wing .14s ease-in-out infinite alternate}
+.bee-abdomen,.bee-stripes,.bee-thorax,.bee-wings,.bee-antennae,.bee-legs{fill:none;stroke:var(--theme-text);stroke-linecap:round;stroke-linejoin:round}
+.bee-abdomen,.bee-thorax{stroke-width:1.4}
+.bee-stripes,.bee-antennae,.bee-legs{stroke-width:1.1}
+.bee-head{fill:var(--theme-text)}
+.bee-wings{stroke-width:1.2;transform-box:fill-box;transform-origin:center;animation:bee-wing-flap .16s ease-in-out infinite alternate}
+.fly-drift{transform-box:fill-box;transform-origin:center;animation:fly-drift 5.8s ease-in-out infinite}
+.fly-two{animation-delay:-1.4s;animation-duration:6.6s}
+.fly-three{animation-delay:-2.1s;animation-duration:5.9s}
+.fly-four{animation-delay:-.7s;animation-duration:6.8s}
+.fly-five{animation-delay:-3.3s;animation-duration:5.3s}
+.fly-six{animation-delay:-2.6s;animation-duration:6.3s}
+.butterfly{fill:none;stroke:var(--theme-text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transform-box:fill-box;transform-origin:center;animation:butterfly-drift 12s ease-in-out infinite alternate}
+.butterfly-two{animation-delay:-6s;animation-duration:14s}
+.butterfly-three{animation-delay:-3s;animation-duration:13s}
+.butterfly-four{animation-delay:-8s;animation-duration:15s}
+.butterfly-wing{transform-box:fill-box;transform-origin:center;animation:wing-flap .72s ease-in-out infinite alternate}
+.butterfly-body{stroke-width:1.6}
+.cicada-branch{fill:none;stroke:var(--theme-text);stroke-width:1.7;stroke-linecap:round;opacity:.32}
+.cicada-flight{transform-box:fill-box;transform-origin:center;animation:cicada-flight 5.4s ease-in-out infinite}
+.cicada-two{animation-delay:-1.7s;animation-duration:6s}
+.cicada-three{animation-delay:-3.2s;animation-duration:5s}
+.cicada-four{animation-delay:-2.4s;animation-duration:6.4s}
+.cicada-five{animation-delay:-4.1s;animation-duration:5.7s}
+.cicada-six{animation-delay:-.8s;animation-duration:4.8s}
+.cicada-body{fill:var(--theme-text);stroke:var(--theme-text);stroke-width:1.3}
+.cicada-wings,.cicada-legs{fill:none;stroke:var(--theme-text);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
+.cicada-wings{transform-box:fill-box;transform-origin:center;animation:wing-flap .14s ease-in-out infinite alternate}
+.cicada-echo{fill:none;stroke:var(--theme-text);stroke-width:1.3;stroke-linecap:round;opacity:0;transform-box:fill-box;transform-origin:center;animation:cicada-call 1.15s steps(2,end) infinite}
+.cicada-two .cicada-echo{animation-delay:.28s}
+.cicada-three .cicada-echo{animation-delay:.56s}
+.cicada-four .cicada-echo{animation-delay:.84s}
+.cicada-five .cicada-echo{animation-delay:.42s}
+.cicada-six .cicada-echo{animation-delay:.7s}
+.day-mote{fill:#fff0b8;opacity:.5;animation:star-twinkle 3s ease-in-out infinite alternate}
+.mote-two{animation-delay:1.5s}.mote-three{animation-delay:.8s}.mote-four{animation-delay:2s}.mote-five{animation-delay:1.2s}
+.cicada-ground{fill:none;stroke:var(--theme-accent);stroke-width:2;stroke-linecap:round;opacity:.48}
+.leaf-branch{fill:none;stroke:var(--theme-text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.simple-leaf{fill:none;stroke:var(--theme-text);stroke-width:1.7;stroke-linejoin:round}
+.leaf-vein{fill:none;stroke:var(--theme-text);stroke-width:1.2;stroke-linecap:round}
+.leaf-drift{transform-box:fill-box;transform-origin:center;animation:leaf-fall 7.5s ease-in-out infinite}
+.leaf-two{animation-delay:-2.2s;animation-duration:8.5s}
+.leaf-three{animation-delay:-4.6s;animation-duration:9s}
+.firefly{fill:#f5e6a0;filter:drop-shadow(0 0 9px #f6e8a4);transform-box:fill-box;transform-origin:center}
+.firefly circle:nth-of-type(1){animation:firefly-core 1.25s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+.firefly circle:nth-of-type(2){fill:#f5e6a0;opacity:.16;animation:firefly-halo 1.7s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.firefly-one{animation:firefly-wander-one 8s ease-in-out infinite}
+.firefly-two{animation:firefly-wander-two 10s ease-in-out infinite -2.4s}
+.firefly-three{animation:firefly-wander-three 9s ease-in-out infinite -4.5s}
+.firefly-four{animation:firefly-wander-four 11s ease-in-out infinite -6s}
+.firefly-five{animation:firefly-wander-five 8.5s ease-in-out infinite -1.7s}
+.firefly-six{animation:firefly-wander-six 9.5s ease-in-out infinite -3.8s}
+.firefly-seven{animation:firefly-wander-seven 7.8s ease-in-out infinite -5.2s}
+.firefly-eight{animation:firefly-wander-eight 10.5s ease-in-out infinite -7s}
+.firefly-nine{animation:firefly-wander-three 8.7s ease-in-out infinite -2.8s}
+.firefly-ten{animation:firefly-wander-two 9.2s ease-in-out infinite -6.4s}
+.firefly-dash{fill:none;stroke:#f5e6a0;stroke-width:1.2;stroke-linecap:round;opacity:.7}
+.firefly-dart{animation:firefly-dart 17s linear infinite -4.3s}
+.dusk-reeds{fill:none;stroke:var(--theme-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.58}
+@keyframes star-twinkle{from{opacity:.22;transform:scale(.62)}to{opacity:1;transform:scale(1.52)}}
+@keyframes star-glow{from{filter:drop-shadow(0 0 1px #d6eaff) drop-shadow(0 0 3px #9bc9ff44)}to{filter:drop-shadow(0 0 10px #fff) drop-shadow(0 0 25px #8ecbff)}}
+@keyframes shooting-star{0%,65.8%{opacity:0;transform:translate(0,0)}66%{opacity:1;transform:translate(0,0)}68%,100%{opacity:0;transform:translate(1440px,900px)}}
+@keyframes shooting-star-reverse{0%,65.8%{opacity:0;transform:translate(0,0)}66%{opacity:1;transform:translate(0,0)}68%,100%{opacity:0;transform:translate(-1440px,900px)}}
+@keyframes bat-drift{0%,100%{transform:translate(-940px,-190px) rotate(-8deg)}16%{transform:translate(-360px,-100px) rotate(12deg)}32%{transform:translate(190px,75px) rotate(-8deg)}48%{transform:translate(130px,390px) rotate(15deg)}64%{transform:translate(-550px,420px) rotate(-12deg)}82%{transform:translate(-1000px,180px) rotate(7deg)}}
+@keyframes bat-echo{0%{opacity:0;scale:.35}3%{opacity:.68}12%{opacity:0;scale:2.5}100%{opacity:0;scale:2.5}}
+@keyframes bat-wing-flap{from{rotate:-18deg}to{rotate:18deg}}
+@keyframes bug-wing-flap{from{scale:1 .7}to{scale:1 1.25}}
+@keyframes bug-drift{from{translate:0 0}to{translate:10px -7px}}
+@keyframes bug-caught{0%,39%,100%{opacity:.82;scale:1}47%,82%{opacity:0;scale:.35}90%{opacity:.82;scale:1}}
+@keyframes butterfly-drift{0%{translate:0 5px;rotate:-3deg}32%{translate:18px -10px;rotate:4deg}36%{translate:74px -42px;rotate:13deg}40%{translate:98px -5px;rotate:-5deg}62%{translate:28px 8px;rotate:2deg}66%{translate:58px -25px;rotate:8deg}70%{translate:38px 3px;rotate:-2deg}100%{translate:38px 3px;rotate:-2deg}}
+@keyframes wing-flap{from{scale:1 .9}to{scale:.88 1.05}}
+@keyframes fly-drift{0%,100%{transform:translate(0,0) rotate(-4deg)}18%{transform:translate(20px,-14px) rotate(5deg)}36%{transform:translate(42px,8px) rotate(-5deg)}48%{transform:translate(74px,-20px) rotate(9deg)}52%{transform:translate(58px,4px) rotate(-8deg)}72%{transform:translate(30px,24px) rotate(4deg)}88%{transform:translate(10px,-6px) rotate(-3deg)}}
+@keyframes fly-buzz{from{opacity:.2}to{opacity:.72}}
+@keyframes fly-wing{from{scale:1 .55}to{scale:.9 1.2}}
+@keyframes bee-wing-flap{from{scale:1 .65}to{scale:.78 1.2}}
+@keyframes cicada-call{0%,48%,100%{opacity:0;scale:.8}56%,70%{opacity:.72;scale:1.08}84%{opacity:0;scale:1.2}}
+@keyframes cicada-flight{0%,100%{transform:translate(0,0) rotate(-3deg)}20%{transform:translate(24px,-16px) rotate(7deg)}42%{transform:translate(55px,8px) rotate(-8deg)}58%{transform:translate(86px,-24px) rotate(11deg)}76%{transform:translate(46px,22px) rotate(-6deg)}90%{transform:translate(14px,-7px) rotate(4deg)}}
+@keyframes leaf-fall{0%{transform:translate(0,-24px) rotate(-18deg)}35%{transform:translate(-18px,42px) rotate(42deg)}62%{transform:translate(22px,92px) rotate(135deg)}66%{transform:translate(72px,74px) rotate(230deg)}70%{transform:translate(10px,112px) rotate(165deg)}100%{transform:translate(4px,168px) rotate(220deg)}}
+@keyframes firefly-core{from{opacity:.5;scale:.72}to{opacity:1;scale:1.3}}
+@keyframes firefly-halo{from{opacity:.24;scale:.45}to{opacity:0;scale:1.9}}
+@keyframes firefly-wander-one{0%,100%{transform:translate(0,0)}18%{transform:translate(26px,-22px)}38%{transform:translate(66px,-8px)}58%{transform:translate(54px,27px)}78%{transform:translate(16px,36px)}}
+@keyframes firefly-wander-two{0%,100%{transform:translate(0,0)}20%{transform:translate(-28px,-24px)}43%{transform:translate(-56px,5px)}63%{transform:translate(-22px,35px)}82%{transform:translate(18px,14px)}}
+@keyframes firefly-wander-three{0%,100%{transform:translate(0,0)}16%{transform:translate(28px,22px)}37%{transform:translate(8px,58px)}61%{transform:translate(-34px,36px)}82%{transform:translate(-22px,-12px)}}
+@keyframes firefly-wander-four{0%,100%{transform:translate(0,0)}22%{transform:translate(-38px,-16px)}44%{transform:translate(-24px,-56px)}66%{transform:translate(20px,-34px)}84%{transform:translate(30px,8px)}}
+@keyframes firefly-wander-five{0%,100%{transform:translate(0,0)}25%{transform:translate(36px,-35px)}50%{transform:translate(70px,6px)}75%{transform:translate(28px,44px)}}
+@keyframes firefly-wander-six{0%,100%{transform:translate(0,0)}20%{transform:translate(-34px,25px)}48%{transform:translate(-62px,-15px)}76%{transform:translate(-24px,-52px)}}
+@keyframes firefly-wander-seven{0%,100%{transform:translate(0,0)}18%{transform:translate(22px,-30px)}42%{transform:translate(-18px,-62px)}67%{transform:translate(-48px,-20px)}84%{transform:translate(-10px,20px)}}
+@keyframes firefly-wander-eight{0%,100%{transform:translate(0,0)}24%{transform:translate(-30px,-42px)}48%{transform:translate(18px,-70px)}72%{transform:translate(44px,-24px)}}
+@keyframes firefly-dart{0%,62%,100%{opacity:0;transform:translate(0,0)}64%{opacity:.9}66%{opacity:1;transform:translate(150px,-90px)}68%{opacity:1;transform:translate(330px,24px)}70%{opacity:0;transform:translate(430px,-68px)}}
+@media(prefers-reduced-motion:reduce){.nature-scene *{animation:none!important;scroll-behavior:auto!important}}
+
+.nature-scene{position:relative;top:auto;left:auto;width:100%;height:100vh;height:100svh;opacity:1;z-index:auto}</style>
+</head>
+<body>
+  <main class="nature-scene" aria-label="Afternoon animation">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="shooting-star-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff8df" stop-opacity="0" /><stop offset="100%" stop-color="#fff" stop-opacity=".95" /></linearGradient><g id="dawn-bee"><g class="buzzing-fly"><path class="fly-vibration" d="M-22-5Q-16 0-22 5M-28-9Q-18 0-28 9M22-5Q16 0 22 5M28-9Q18 0 28 9" /><path class="bee-wings" d="M-2-2Q-9-12-13-6Q-13-2-3 1M0-2Q2-13 8-9Q10-5 3 0" /><ellipse class="bee-abdomen" cx="-4" cy="0" rx="5.2" ry="3.1" /><path class="bee-stripes" d="M-6-2.3v4.6M-2-3v6" /><ellipse class="bee-thorax" cx="2.5" cy="0" rx="3.2" ry="3.5" /><circle class="bee-head" cx="7" cy="0" r="2.7" /><path class="bee-antennae" d="M7-2q1-4 3-4m-1 4q3-3 5-2" /><path class="bee-legs" d="m-3 2-4 4m3-5-5 1m10 1 1 4m2-5 4 3" /></g></g><g id="singing-cicada"><path class="cicada-echo" d="M-7-4Q-15 0-7 4M7-4Q15 0 7 4M-8-9Q-21 0-8 9M8-9Q21 0 8 9" /><path class="cicada-wings" d="M-2-2Q-8-17-18-10Q-18-2-4 3M2-2Q8-17 18-10Q18-2 4 3" /><ellipse class="cicada-body" cy="0" rx="3.5" ry="8" /><circle class="cicada-body" cy="-8" r="3" /><path class="cicada-legs" d="M-2 4-8 9m10-5 6 5m-7-13-4-6m6 6 4-6" /></g></defs>
+            
+      <g class="scene-afternoon">
+                <path class="leaf-branch" d="M0 1116q145-36 290 0t290 0 290 0 290 0 280 0" />
+                <g class="static-leaf" transform="translate(145 1080)"><path class="simple-leaf" d="M0-22C13-14 13 8 0 22-13 8-13-14 0-22Z" /><path class="leaf-vein" d="M0-18v36" /></g>
+                <g class="static-leaf" transform="translate(1170 1085) rotate(32)"><path class="simple-leaf" d="M0-22C13-14 13 8 0 22-13 8-13-14 0-22Z" /><path class="leaf-vein" d="M0-18v36" /></g>
+            </g>
+            
+    </svg>
+    <canvas class="leaf-canvas" aria-label="Leaves swept across the afternoon sky by the wind"></canvas>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector(".leaf-canvas");
+      const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
+      const width = 1440;
+      const height = 900;
+      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const color = getComputedStyle(document.documentElement).getPropertyValue("--theme-text").trim() || "#303b36";
+      const pointer = { x: 0, y: 0, active: false };
+      const random = (min, max) => min + Math.random() * (max - min);
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+      const angleDifference = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
+      const leafColors = ["#b6a45f", "#c3a46b", "#9fae75", "#c78f63", "#a9b77b"];
+      const leaves = Array.from({ length: 20 }, (_, index) => ({
+        x: random(0, width),
+        y: random(-30, height + 30),
+        vx: random(-35, 35),
+        vy: random(-15, 15),
+        size: index < 6 ? random(.35, .58) : random(.58, 1.12),
+        angle: random(0, Math.PI * 2),
+        spin: random(-.55, .55),
+        phase: random(0, Math.PI * 2),
+        color: leafColors[Math.floor(Math.random() * leafColors.length)],
+      }));
+      const wind = {
+        angle: random(-.35, .35),
+        targetAngle: random(-.6, .6),
+        directionIn: random(10, 18),
+        nextGustIn: random(1.8, 4.2),
+        gustRemaining: 0,
+        gustDuration: 0,
+        gustStrength: 0,
+        vortexIn: random(6, 12),
+        vortexRemaining: 0,
+        vortexDuration: 0,
+        vortexStrength: 0,
+        vortexDirection: 1,
+        vortexX: 0,
+        vortexY: 0,
+        vortexRadius: 0,
+      };
+      let previousTime = 0;
+      let elapsed = 0;
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
+      }
+
+      function updateWind(dt) {
+        wind.directionIn -= dt;
+        if (wind.directionIn <= 0) {
+          wind.targetAngle = random(-Math.PI, Math.PI);
+          wind.directionIn = random(10, 20);
+        }
+        wind.angle += angleDifference(wind.angle, wind.targetAngle) * Math.min(1, dt * .24);
+        if (wind.gustRemaining > 0) {
+          wind.gustRemaining -= dt;
+        } else {
+          wind.nextGustIn -= dt;
+          if (wind.nextGustIn <= 0) {
+            wind.gustDuration = random(1.4, 2.8);
+            wind.gustRemaining = wind.gustDuration;
+            wind.gustStrength = random(75, 145);
+            wind.nextGustIn = random(3.2, 7);
+          }
+        }
+        const gustProgress = wind.gustDuration > 0
+          ? 1 - wind.gustRemaining / wind.gustDuration
+          : 0;
+        const gust = wind.gustRemaining > 0 ? Math.sin(gustProgress * Math.PI) * wind.gustStrength : 0;
+
+        if (wind.vortexRemaining > 0) {
+          wind.vortexRemaining -= dt;
+        } else {
+          wind.vortexIn -= dt;
+          if (wind.vortexIn <= 0) {
+            wind.vortexX = random(120, width - 120);
+            wind.vortexY = random(100, height - 100);
+            wind.vortexRadius = random(110, 210);
+            wind.vortexStrength = random(90, 165);
+            wind.vortexDirection = Math.random() < .5 ? -1 : 1;
+            wind.vortexDuration = random(2.1, 3.8);
+            wind.vortexRemaining = wind.vortexDuration;
+            wind.vortexIn = random(8, 16);
+          }
+        }
+        const vortexProgress = wind.vortexDuration > 0 ? 1 - wind.vortexRemaining / wind.vortexDuration : 0;
+        const vortexEnvelope = wind.vortexRemaining > 0 ? Math.sin(vortexProgress * Math.PI) : 0;
+        const windSpeed = 34 + gust;
+        const windX = Math.cos(wind.angle) * windSpeed;
+        const windY = Math.sin(wind.angle) * windSpeed;
+
+        for (const leaf of leaves) {
+          const sizeWind = 1.35 - leaf.size * .62;
+          const response = clamp(1.65 - leaf.size * .65, .75, 1.5);
+          const turbulence = (Math.sin(elapsed * 1.35 + leaf.phase) * 22 + Math.sin(elapsed * 2.6 + leaf.phase * 1.7) * 11) * sizeWind;
+          let avoidX = 0;
+          let avoidY = 0;
+          if (pointer.active) {
+            const awayX = leaf.x - pointer.x;
+            const awayY = leaf.y - pointer.y;
+            const distance = Math.hypot(awayX, awayY);
+            if (distance < 165) {
+              const strength = Math.pow(1 - distance / 165, 2);
+              const awayAngle = distance > 1 ? Math.atan2(awayY, awayX) : leaf.phase;
+              avoidX = Math.cos(awayAngle) * strength * 220;
+              avoidY = Math.sin(awayAngle) * strength * 220;
+            }
+          }
+          let vortexX = 0;
+          let vortexY = 0;
+          let vortexSpin = 0;
+          if (vortexEnvelope > 0) {
+            const dx = leaf.x - wind.vortexX;
+            const dy = leaf.y - wind.vortexY;
+            const distance = Math.hypot(dx, dy);
+            if (distance > 0 && distance < wind.vortexRadius) {
+              const weight = Math.pow(1 - distance / wind.vortexRadius, 2) * vortexEnvelope;
+              const swirl = wind.vortexDirection * wind.vortexStrength * weight * sizeWind;
+              vortexX = (-dy / distance) * swirl - (dx / distance) * swirl * .14;
+              vortexY = (dx / distance) * swirl - (dy / distance) * swirl * .14;
+              vortexSpin = wind.vortexDirection * weight * 1.4;
+            }
+          }
+          const targetVx = windX * sizeWind + turbulence + avoidX + vortexX;
+          const updraft = -gust * (.12 + .06 * Math.sin(elapsed * 2 + leaf.phase));
+          const targetVy = (windY + Math.sin(elapsed * .95 + leaf.phase) * 17 + updraft) * sizeWind + avoidY + vortexY;
+          leaf.vx += (targetVx - leaf.vx) * Math.min(1, dt * (1.1 + gust * .008) * response);
+          leaf.vy += (targetVy - leaf.vy) * Math.min(1, dt * 1.25 * response);
+          leaf.x += leaf.vx * dt;
+          leaf.y += leaf.vy * dt;
+          leaf.angle += (leaf.spin / leaf.size + gust * .0025 + turbulence * .0015 + vortexSpin) * dt;
+          if (leaf.x < -90) leaf.x = width + 90;
+          else if (leaf.x > width + 90) leaf.x = -90;
+          if (leaf.y < -100) leaf.y = height + 100;
+          else if (leaf.y > height + 100) leaf.y = -100;
+        }
+      }
+
+      function drawLeaf(leaf) {
+        ctx.save();
+        ctx.translate(leaf.x, leaf.y);
+        ctx.rotate(leaf.angle);
+        ctx.scale(leaf.size, leaf.size);
+        ctx.globalAlpha = .5;
+        ctx.fillStyle = leaf.color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.35;
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(0, -22);
+        ctx.bezierCurveTo(13, -14, 13, 8, 0, 22);
+        ctx.bezierCurveTo(-13, 8, -13, -14, 0, -22);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.globalAlpha = .55;
+        ctx.lineWidth = 1;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(0, -18);
+        ctx.lineTo(0, 18);
+        ctx.moveTo(0, -4);
+        ctx.lineTo(7, -11);
+        ctx.moveTo(0, 3);
+        ctx.lineTo(-7, -5);
+        ctx.moveTo(0, 9);
+        ctx.lineTo(6, 3);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function frame(timestamp = 0) {
+        const dt = previousTime ? Math.min((timestamp - previousTime) / 1000, .04) : 0;
+        previousTime = timestamp;
+        elapsed += dt;
+        ctx.clearRect(0, 0, width, height);
+        if (!reducedMotion) updateWind(dt);
+        for (const leaf of leaves) drawLeaf(leaf);
+        if (!reducedMotion) requestAnimationFrame(frame);
+      }
+
+      function updatePointer(event) {
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = (event.clientX - rect.left) / rect.width * width;
+        pointer.y = (event.clientY - rect.top) / rect.height * height;
+        pointer.active = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      }
+
+      window.addEventListener("pointermove", updatePointer, { passive: true });
+      window.addEventListener("pointerout", (event) => { if (!event.relatedTarget) pointer.active = false; }, { passive: true });
+      window.addEventListener("resize", resize, { passive: true });
+      resize();
+      frame();
+    })();
+  </script>
+</body>
+</html>

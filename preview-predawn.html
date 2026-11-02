@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en" data-sky-scene="predawn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#28304d">
+  <title>Pre-dawn — Animation Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { background: linear-gradient(180deg, #28304d 0%, #554661 100%); }
+    canvas { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <canvas aria-label="A pre-dawn sky with stars, small flying insects and a bat"></canvas>
+  <script>
+    (() => {
+      const canvas = document.querySelector("canvas");
+      const context = canvas.getContext("2d", { alpha: true, desynchronized: true });
+      const logicalWidth = 1440;
+      const logicalHeight = 900;
+      const bugWorld = { left: -logicalWidth * .35, right: logicalWidth * 1.35, top: -logicalHeight * .35, bottom: logicalHeight * 1.35 };
+      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let previousTime = 0;
+      let elapsed = 0;
+      let skyRotation = 0;
+
+      const random = (min, max) => min + Math.random() * (max - min);
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+      const angleDifference = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
+      const wrap = (value, min, max) => value < min ? max - ((min - value) % (max - min)) : value > max ? min + ((value - max) % (max - min)) : value;
+
+      // Match the night preview: tiny multicolour points, random twinkle phases and selective glow.
+      const starColors = ["#eef3ff", "#ffe1ad", "#c9dcff", "#fff1d4", "#dce8ff", "#fff6e7", "#ffd49a"];
+      const stars = Array.from({ length: 112 }, () => ({
+        x: random(8, logicalWidth - 8),
+        y: random(8, logicalHeight - 8),
+        radius: random(.38, .86),
+        color: starColors[Math.floor(Math.random() * starColors.length)],
+        glow: Math.random() < .3,
+        phase: random(0, Math.PI * 2),
+        rate: random(1.4, 2.9),
+      }));
+
+      const bugs = [
+        [225, 295], [1130, 670], [495, 200], [1320, 350], [720, 690], [870, 445],
+        [135, 610], [385, 420], [575, 780], [635, 290], [805, 105],
+        [1010, 755], [1165, 185], [1245, 495], [310, 115], [1040, 350],
+      ].map(([x, y], index) => ({
+        x, y,
+        heading: random(0, Math.PI * 2),
+        turnRate: random(-.4, .4),
+        targetTurn: random(-1.1, 1.1),
+        turnIn: random(.3, .9),
+        speed: random(18, 34),
+        targetSpeed: random(24, 52),
+        hoverIn: random(3, 7),
+        dartIn: random(1.5, 5.5),
+        dartFor: 0,
+        dartHeading: 0,
+        dartSpeed: 0,
+        phase: random(0, Math.PI * 2),
+        size: random(.42, 1),
+        color: index % 2 ? "#202235" : "#2a2738",
+      }));
+
+      const bat = {
+        x: 1080,
+        y: 341,
+        heading: Math.PI * .82,
+        speed: 108,
+        echoCooldown: random(.8, 2.1),
+        echoPulseRemaining: 0,
+      };
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(rect.width * ratio);
+        canvas.height = Math.round(rect.height * ratio);
+        context.setTransform(canvas.width / logicalWidth, 0, 0, canvas.height / logicalHeight, 0, 0);
+      }
+
+      function steerFromEdges(mover, margin, strength = 1.5) {
+        const edgeDistance = Math.min(mover.x, logicalWidth - mover.x, mover.y, logicalHeight - mover.y);
+        const weight = clamp((margin - edgeDistance) / margin, 0, 1);
+        const inward = Math.atan2(logicalHeight / 2 - mover.y, logicalWidth / 2 - mover.x);
+        return angleDifference(mover.heading, inward) * weight * strength;
+      }
+
+      function steerBugFromBounds(bug) {
+        const edgeMargin = 120;
+        const edgeDistance = Math.min(
+          bug.x - bugWorld.left,
+          bugWorld.right - bug.x,
+          bug.y - bugWorld.top,
+          bugWorld.bottom - bug.y,
+        );
+        const edgeWeight = clamp((edgeMargin - edgeDistance) / edgeMargin, 0, 1);
+        const outsideDistance = Math.max(0, -bug.x, bug.x - logicalWidth, -bug.y, bug.y - logicalHeight);
+        const outsideWeight = clamp(outsideDistance / 150, 0, 1);
+        const inwardHeading = Math.atan2(logicalHeight / 2 - bug.y, logicalWidth / 2 - bug.x);
+        return angleDifference(bug.heading, inwardHeading) * (edgeWeight * 1.5 + outsideWeight * 1.8);
+      }
+
+      function moveBug(bug, dt) {
+        bug.turnIn -= dt;
+        if (bug.turnIn <= 0) {
+          bug.targetTurn = random(-1.25, 1.25);
+          bug.targetSpeed = random(22, 58);
+          bug.turnIn = random(.28, .8);
+          bug.hoverIn -= 1;
+          if (bug.hoverIn <= 0) {
+            bug.targetSpeed = random(4, 10);
+            bug.hoverIn = random(3, 7);
+          }
+        }
+
+        bug.dartIn -= dt;
+        if (bug.dartIn <= 0 && bug.dartFor <= 0) {
+          bug.dartFor = random(.14, .27);
+          const fleeX = bug.x - bat.x;
+          const fleeY = bug.y - bat.y;
+          const threatDistance = Math.hypot(fleeX, fleeY);
+          bug.dartHeading = threatDistance < 230
+            ? Math.atan2(fleeY, fleeX) + random(-.45, .45)
+            : bug.heading + random(-1.15, 1.15);
+          bug.dartSpeed = random(210, 310);
+          bug.dartIn = random(3.5, 8);
+        }
+
+        const steer = steerBugFromBounds(bug);
+        const fleeX = bug.x - bat.x;
+        const fleeY = bug.y - bat.y;
+        const threatDistance = Math.hypot(fleeX, fleeY);
+        const fleeWeight = threatDistance < 230 ? Math.pow(1 - threatDistance / 230, 2) : 0;
+        const fleeHeading = threatDistance > 1 ? Math.atan2(fleeY, fleeX) : bug.heading + Math.PI;
+        const fleeSteer = angleDifference(bug.heading, fleeHeading) * fleeWeight * 3.4;
+        bug.turnRate += (bug.targetTurn + steer + fleeSteer - bug.turnRate) * Math.min(1, dt * 2.2);
+        bug.heading += (bug.turnRate + fleeSteer * 2) * dt;
+        let speed = bug.speed + (bug.targetSpeed - bug.speed) * Math.min(1, dt * 1.8);
+        speed += fleeWeight * 75;
+        if (bug.dartFor > 0) {
+          bug.dartFor -= dt;
+          bug.heading += angleDifference(bug.heading, bug.dartHeading) * Math.min(1, dt * 9);
+          speed = bug.dartSpeed;
+        }
+        bug.speed = speed;
+
+        const flutter = Math.sin(elapsed * 14 + bug.phase) * 2;
+        bug.x += Math.cos(bug.heading) * speed * dt + Math.cos(elapsed * 7 + bug.phase) * flutter * dt;
+        bug.y += Math.sin(bug.heading) * speed * dt + flutter * dt;
+        bug.x = wrap(bug.x, bugWorld.left, bugWorld.right);
+        bug.y = wrap(bug.y, bugWorld.top, bugWorld.bottom);
+      }
+
+      function moveBat(dt) {
+        let target = { x: logicalWidth / 2, y: logicalHeight / 2 };
+        let nearestDistance = Infinity;
+        for (const bug of bugs) {
+          if (bug.x < 0 || bug.x > logicalWidth || bug.y < 0 || bug.y > logicalHeight) continue;
+          const distance = Math.hypot(bug.x - bat.x, bug.y - bat.y);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            target = bug;
+          }
+        }
+        if (!Number.isFinite(nearestDistance)) nearestDistance = Math.hypot(target.x - bat.x, target.y - bat.y);
+
+        bat.echoPulseRemaining = Math.max(0, bat.echoPulseRemaining - dt);
+        if (nearestDistance < 170) {
+          bat.echoPulseRemaining = 0;
+          bat.echoCooldown = random(.25, .65);
+        } else if (bat.echoPulseRemaining <= 0) {
+          bat.echoCooldown -= dt;
+          if (bat.echoCooldown <= 0) {
+            bat.echoPulseRemaining = .28;
+            bat.echoCooldown = random(1.3, 3.6);
+          }
+        }
+
+        const targetHeading = Math.atan2(target.y - bat.y, target.x - bat.x);
+        const turn = angleDifference(bat.heading, targetHeading);
+        const returnSteer = steerBugFromBounds(bat);
+        bat.heading += turn * Math.min(1, dt * 3.8) + returnSteer * dt;
+        const targetSpeed = 102 + Math.min(nearestDistance * .045, 42);
+        bat.speed += (targetSpeed - bat.speed) * Math.min(1, dt * 1.1);
+        bat.x += Math.cos(bat.heading) * bat.speed * dt;
+        bat.y += Math.sin(bat.heading) * bat.speed * dt;
+        bat.x = wrap(bat.x, bugWorld.left, bugWorld.right);
+        bat.y = wrap(bat.y, bugWorld.top, bugWorld.bottom);
+      }
+
+      function drawStar(star, time) {
+        const wave = (Math.sin(time * star.rate + star.phase) + 1) / 2;
+        context.globalAlpha = .34 + wave * .56;
+        context.fillStyle = star.color;
+        context.shadowColor = star.glow ? star.color : "transparent";
+        context.shadowBlur = star.glow ? 2.4 + wave * 3.4 : 0;
+        context.beginPath();
+        context.arc(star.x, star.y, star.radius * (.9 + wave * .2), 0, Math.PI * 2);
+        context.fill();
+      }
+
+      function drawBug(bug, time) {
+        const flutter = Math.sin(time * 34 + bug.phase) * .65;
+        context.save();
+        context.translate(bug.x, bug.y);
+        context.rotate(bug.heading);
+        context.scale(bug.size, bug.size);
+        context.shadowColor = "transparent";
+        context.shadowBlur = 0;
+        context.fillStyle = bug.color;
+        // Two tiny beating wings and a single body dot keep the bug mark simple.
+        context.save();
+        context.rotate(flutter);
+        context.beginPath();
+        context.ellipse(-2.1, -1.7, 2.2, 1.05, -.35, 0, Math.PI * 2);
+        context.ellipse(2.1, -1.7, 2.2, 1.05, .35, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+        context.globalAlpha = .9;
+        context.beginPath();
+        context.arc(0, 0, 2.2, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+      }
+
+      function drawBatWing(side, flap) {
+        context.save();
+        context.translate(side * 4, 1);
+        context.rotate(side * flap);
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(side * 20, -7);
+        context.lineTo(side * 17, 4);
+        context.closePath();
+        context.fill();
+        context.restore();
+      }
+
+      function drawBat(time) {
+        context.save();
+        context.translate(bat.x, bat.y);
+        context.rotate(bat.heading + Math.PI / 2);
+        context.fillStyle = "#1e2032";
+        context.shadowColor = "transparent";
+        context.shadowBlur = 0;
+
+        // Brief sonar pings: two quick rings, followed by a quiet pause.
+        const echoAge = .28 - bat.echoPulseRemaining;
+        for (let ring = 0; ring < 2; ring += 1) {
+          const age = echoAge - ring * .075;
+          if (bat.echoPulseRemaining > 0 && age >= 0 && age < .24) {
+            const progress = age / .24;
+            context.globalAlpha = .82 * (1 - progress);
+            context.strokeStyle = "#91aee8";
+            context.lineWidth = 1.5;
+            context.beginPath();
+            context.arc(0, 0, 12 + progress * 55, Math.PI * 13 / 12, Math.PI * 23 / 12);
+            context.stroke();
+          }
+        }
+
+        const flap = Math.sin(time * 18) * .38;
+        context.globalAlpha = .88;
+        drawBatWing(-1, flap);
+        drawBatWing(1, flap);
+        context.beginPath();
+        context.ellipse(0, 4, 3, 5, 0, 0, Math.PI * 2);
+        context.fill();
+        // Small triangular ears and a round head.
+        context.beginPath();
+        context.moveTo(-4.5, -3);
+        context.lineTo(-5.5, -9);
+        context.lineTo(-1, -5.5);
+        context.closePath();
+        context.moveTo(4.5, -3);
+        context.lineTo(5.5, -9);
+        context.lineTo(1, -5.5);
+        context.closePath();
+        context.fill();
+        context.beginPath();
+        context.arc(0, 0, 5, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+      }
+
+      function draw(timestamp = 0) {
+        const dt = previousTime ? Math.min((timestamp - previousTime) / 1000, .04) : 0;
+        previousTime = timestamp;
+        elapsed += dt;
+        skyRotation = (skyRotation + dt * Math.PI * 2 / 1800) % (Math.PI * 2);
+        context.clearRect(0, 0, logicalWidth, logicalHeight);
+        context.shadowBlur = 0;
+        const centerX = logicalWidth / 2;
+        const centerY = logicalHeight / 2;
+        context.save();
+        context.translate(centerX, centerY);
+        context.rotate(skyRotation);
+        context.translate(-centerX, -centerY);
+        for (const star of stars) drawStar(star, elapsed);
+        context.restore();
+        context.globalAlpha = 1;
+        context.shadowBlur = 0;
+        if (!reducedMotion) {
+          for (const bug of bugs) moveBug(bug, dt);
+          moveBat(dt);
+        }
+        for (const bug of bugs) drawBug(bug, elapsed);
+        drawBat(elapsed);
+        context.globalAlpha = 1;
+        context.shadowBlur = 0;
+        if (!reducedMotion) requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", resize, { passive: true });
+      resize();
+      draw();
+    })();
+  </script>
+</body>
+</html>

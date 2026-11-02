@@ -2,6 +2,7 @@ SHELL=/bin/bash
 
 dev:
 	toucan generate .
+	cp preview-*.html dist/
 
 dist:
 	toucan generate . --target live

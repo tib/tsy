@@ -7,6 +7,7 @@ views:
 ---
 
 <section class="hero">
+    <canvas class="hero-sunset-birds" aria-hidden="true"></canvas>
     <div class="hero-copy">
         <span class="hero-star sun-mark" aria-hidden="true">✳</span>
         <p class="eyebrow">A practice in balance</p>

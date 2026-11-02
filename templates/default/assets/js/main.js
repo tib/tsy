@@ -4,6 +4,10 @@ const simulationButton = document.querySelector("#sky-simulation-toggle");
 const simulationLabel = document.querySelector("#sky-simulation-label");
 const simulationIcon = document.querySelector(".simulation-play-icon");
 const skyThemeButtons = [...document.querySelectorAll("[data-sky-theme]")];
+const celestialSun = document.querySelector(".celestial-sun");
+const celestialMoon = document.querySelector(".celestial-moon");
+const celestialTrack = document.querySelector(".footer-celestial");
+const celestialArt = [...document.querySelectorAll(".celestial-art")];
 const rootStyle = document.documentElement.style;
 const solarLocationKey = "tsy-solar-location";
 
@@ -14,7 +18,7 @@ let simulationRunning = false;
 let simulationStartedAt = 0;
 let simulationElapsed = 0;
 let simulationFrame = null;
-const simulatedDayDuration = 120_000;
+const simulatedDayDuration = 60_000;
 
 const palettes = {
     night: {
@@ -232,11 +236,66 @@ function applyPalette(palette, logoHueOverride = null) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", palette.skyStart);
 }
 
+function updateCelestialPositions(time, events) {
+    const sunrise = events.sunrise ? localMinutes(events.sunrise) : 360;
+    const sunset = events.sunset ? localMinutes(events.sunset) : 1080;
+    const daylightLength = Math.max(1, sunset - sunrise);
+    const nightLength = Math.max(1, 1440 - daylightLength);
+    const localTime = ((time % 1440) + 1440) % 1440;
+    let orbitProgress;
+    if (localTime >= sunrise && localTime < sunset) {
+        const daylightProgress = (localTime - sunrise) / daylightLength;
+        orbitProgress = daylightProgress * 0.5;
+    } else {
+        const nightProgress = localTime >= sunset
+            ? (localTime - sunset) / nightLength
+            : (localTime + 1440 - sunset) / nightLength;
+        orbitProgress = 0.5 + nightProgress * 0.5;
+    }
+
+    const pointOnArc = (progress) => ({
+        x: 720 + 720 * Math.cos(Math.PI + 2 * Math.PI * progress),
+        y: 110 + 90 * Math.sin(Math.PI + 2 * Math.PI * progress),
+    });
+    const setPosition = (element, progress) => {
+        const angle = Math.PI + 2 * Math.PI * progress;
+        const point = pointOnArc(progress);
+        const edgeDistance = 1 - Math.abs(Math.cos(angle));
+        const opacity = 0.12 + 0.88 * Math.pow(Math.max(0, edgeDistance), 0.6);
+        element?.setAttribute("transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`);
+        element?.style.setProperty("opacity", opacity.toFixed(3));
+    };
+
+    setPosition(celestialSun, orbitProgress);
+    setPosition(celestialMoon, (orbitProgress + 0.5) % 1);
+}
+
+function updateCelestialScale() {
+    if (!celestialTrack) return;
+    const { width, height } = celestialTrack.getBoundingClientRect();
+    if (!width || !height) return;
+    const horizontalCorrection = (height * 1440) / (width * 220);
+    celestialArt.forEach((art) => art.setAttribute("transform", `scale(${horizontalCorrection.toFixed(4)} 1)`));
+}
+
+updateCelestialScale();
+window.addEventListener("resize", updateCelestialScale);
+if (celestialTrack && "ResizeObserver" in window) {
+    new ResizeObserver(updateCelestialScale).observe(celestialTrack);
+}
+
 function updateSky() {
     const now = new Date();
     const time = previewMinutes === null ? localMinutes(now) : previewMinutes;
     const palette = selectedPaletteKey ? palettes[selectedPaletteKey] : paletteAt(time);
+    const stops = paletteStops(now);
+    const activeStop = stops.reduce((active, stop) => stop.time <= time ? stop : active, stops[0]);
+    const activeScene = selectedPaletteKey || Object.keys(palettes).find((key) => palettes[key] === activeStop.palette) || "night";
+    if (document.documentElement.dataset.skyScene !== activeScene) {
+        document.documentElement.dataset.skyScene = activeScene;
+    }
     const events = getSolarEvents(now);
+    updateCelestialPositions(time, events);
     const isLiveSky = previewMinutes === null && selectedPaletteKey === null;
     applyPalette(palette, isLiveSky ? 200 : null);
 
@@ -327,8 +386,460 @@ skyThemeButtons.forEach((button) => button.addEventListener("click", () => {
     updateSky();
 }));
 
+function initializeSwallowCanvas() {
+    const canvas = document.querySelector(".hero-sunset-birds");
+    const context = canvas?.getContext("2d", { alpha: true, desynchronized: true });
+    if (!canvas || !context) return;
+
+    const width = 820;
+    const height = 150;
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const random = (min, max) => min + Math.random() * (max - min);
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const angleDifference = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
+    const wrap = (value, min, max) => value < min ? max - ((min - value) % (max - min)) : value > max ? min + ((value - max) % (max - min)) : value;
+    const flock = Array.from({ length: 12 }, (_, index) => ({
+        x: width * .5 + random(-135, 135),
+        y: height * .5 + random(-42, 42),
+        heading: random(-.7, .7),
+        speed: random(45, 65),
+        cruiseSpeed: random(58, 86),
+        scale: random(.54, .76),
+        phase: random(0, Math.PI * 2),
+        dartIn: random(2, 6),
+        dartFor: 0,
+        dartHeading: 0,
+        dartSpeed: 0,
+        targetX: random(100, width - 100),
+        targetY: random(24, height - 24),
+        targetIn: random(2.5, 5),
+        index,
+    }));
+    const leader = flock[0];
+    let pointer = null;
+    let frame = null;
+    let previousTime = 0;
+    let elapsed = 0;
+    let intersectsViewport = true;
+
+    function resize() {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = Math.round(rect.width * pixelRatio);
+        canvas.height = Math.round(rect.height * pixelRatio);
+        context.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
+    }
+
+    function pointerFlee(bird, radius) {
+        if (!pointer) return null;
+        const dx = bird.x - pointer.x;
+        const dy = bird.y - pointer.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance >= radius) return null;
+        const angle = distance > .001 ? Math.atan2(dy, dx) : bird.phase;
+        return { x: Math.cos(angle), y: Math.sin(angle), strength: 1 - distance / radius };
+    }
+
+    function moveLeader(dt) {
+        leader.targetIn -= dt;
+        if (leader.targetIn <= 0) {
+            leader.targetX = random(70, width - 70);
+            leader.targetY = random(20, height - 20);
+            leader.targetIn = random(2.5, 5.5);
+        }
+        const flee = pointerFlee(leader, 80);
+        const aim = flee
+            ? Math.atan2(flee.y, flee.x)
+            : Math.atan2(leader.targetY - leader.y, leader.targetX - leader.x);
+        const weave = flee ? 0 : Math.sin(elapsed * 2.6 + leader.phase) * .18;
+        leader.heading += clamp(angleDifference(leader.heading, aim + weave), -(flee ? 4.8 : 2.4) * dt, (flee ? 4.8 : 2.4) * dt);
+        leader.dartIn -= dt;
+        let targetSpeed = leader.cruiseSpeed + (flee ? flee.strength * 85 : 0);
+        if (flee) leader.dartFor = 0;
+        if (!flee && leader.dartIn <= 0 && leader.dartFor <= 0) {
+            leader.dartFor = random(.12, .2);
+            leader.dartHeading = leader.heading + random(-.8, .8);
+            leader.dartSpeed = random(105, 145);
+            leader.dartIn = random(3, 7);
+        }
+        if (leader.dartFor > 0) {
+            leader.dartFor -= dt;
+            leader.heading += angleDifference(leader.heading, leader.dartHeading) * Math.min(1, dt * 7);
+            targetSpeed = leader.dartSpeed;
+        }
+        leader.speed += (targetSpeed - leader.speed) * Math.min(1, dt * 3.2);
+        leader.x = wrap(leader.x + Math.cos(leader.heading) * leader.speed * dt, -35, width + 35);
+        leader.y = wrap(leader.y + Math.sin(leader.heading) * leader.speed * dt, -28, height + 28);
+    }
+
+    function moveFollowers(dt) {
+        const snapshots = flock.map(({ x, y, heading }) => ({ x, y, heading }));
+        for (let index = 1; index < flock.length; index += 1) {
+            const bird = flock[index];
+            const own = snapshots[index];
+            let centerX = 0;
+            let centerY = 0;
+            let alignX = 0;
+            let alignY = 0;
+            let separationX = 0;
+            let separationY = 0;
+            let neighbors = 0;
+
+            for (let otherIndex = 0; otherIndex < snapshots.length; otherIndex += 1) {
+                if (otherIndex === index) continue;
+                const other = snapshots[otherIndex];
+                const dx = other.x - own.x;
+                const dy = other.y - own.y;
+                const distance = Math.hypot(dx, dy);
+                if (distance < 155) {
+                    centerX += other.x;
+                    centerY += other.y;
+                    alignX += Math.cos(other.heading);
+                    alignY += Math.sin(other.heading);
+                    neighbors += 1;
+                }
+                if (distance > 0 && distance < 24) {
+                    const strength = (24 - distance) / 24;
+                    separationX -= dx / distance * strength;
+                    separationY -= dy / distance * strength;
+                }
+            }
+
+            let steerX = Math.cos(leader.heading) * .55;
+            let steerY = Math.sin(leader.heading) * .55;
+            if (neighbors) {
+                centerX = centerX / neighbors - own.x;
+                centerY = centerY / neighbors - own.y;
+                const centerLength = Math.hypot(centerX, centerY) || 1;
+                const alignLength = Math.hypot(alignX, alignY) || 1;
+                steerX += centerX / centerLength * 1.1 + alignX / alignLength * .7;
+                steerY += centerY / centerLength * 1.1 + alignY / alignLength * .7;
+            }
+            steerX += separationX * 1.5;
+            steerY += separationY * 1.5;
+            const flee = pointerFlee(bird, 72);
+            if (flee) {
+                steerX += flee.x * (2 + flee.strength * 2);
+                steerY += flee.y * (2 + flee.strength * 2);
+            }
+            const desired = Math.atan2(steerY, steerX) + Math.sin(elapsed * 2 + bird.phase) * .1;
+            bird.heading += clamp(angleDifference(bird.heading, desired), -(flee ? 4.6 : 3) * dt, (flee ? 4.6 : 3) * dt);
+            bird.dartIn -= dt;
+            let targetSpeed = bird.cruiseSpeed + (flee ? flee.strength * 72 : 0);
+            if (flee) bird.dartFor = 0;
+            if (!flee && bird.dartIn <= 0 && bird.dartFor <= 0) {
+                bird.dartFor = random(.1, .17);
+                bird.dartHeading = bird.heading + random(-.8, .8);
+                bird.dartSpeed = random(105, 145);
+                bird.dartIn = random(3, 7);
+            }
+            if (bird.dartFor > 0) {
+                bird.dartFor -= dt;
+                bird.heading += angleDifference(bird.heading, bird.dartHeading) * Math.min(1, dt * 8);
+                targetSpeed = bird.dartSpeed;
+            }
+            bird.speed += (targetSpeed - bird.speed) * Math.min(1, dt * 3.6);
+            const flutter = Math.sin(elapsed * 3.5 + bird.phase) * 2.5;
+            bird.x = wrap(bird.x + (Math.cos(bird.heading) * bird.speed - Math.sin(bird.heading) * flutter + separationX * 28) * dt, -35, width + 35);
+            bird.y = wrap(bird.y + (Math.sin(bird.heading) * bird.speed + Math.cos(bird.heading) * flutter + separationY * 28) * dt, -28, height + 28);
+        }
+    }
+
+    function drawSwallow(bird, time) {
+        context.save();
+        context.translate(bird.x, bird.y);
+        context.rotate(bird.heading);
+        context.scale(bird.scale, bird.scale);
+        const wingBeat = Math.sin(time * 8 + bird.phase);
+
+        context.beginPath();
+        context.moveTo(-7, -1.2);
+        context.bezierCurveTo(-11, -2.6, -16, -2.5, -20, -2.4);
+        context.quadraticCurveTo(-15.5, -.6, -9, .35);
+        context.closePath();
+        context.fill();
+        context.beginPath();
+        context.moveTo(-7, 1.2);
+        context.bezierCurveTo(-11, 2.6, -16, 2.5, -20, 2.4);
+        context.quadraticCurveTo(-15.5, .6, -9, -.35);
+        context.closePath();
+        context.fill();
+
+        for (const side of [-1, 1]) {
+            context.save();
+            context.translate(1, side * .8);
+            context.rotate(side * (.08 + wingBeat * .16));
+            context.beginPath();
+            context.moveTo(1, side * 1.4);
+            context.bezierCurveTo(-1, side * 4, -4, side * 9, -14, side * 10);
+            context.bezierCurveTo(-8, side * 6.5, -5, side * 2.5, -2.5, side * 2.4);
+            context.quadraticCurveTo(-.5, side * 1.7, 1, side * 1.4);
+            context.closePath();
+            context.fill();
+            context.restore();
+        }
+
+        context.beginPath();
+        context.moveTo(7, 0);
+        context.bezierCurveTo(3.5, -2.1, -1, -2.9, -6, -2.65);
+        context.bezierCurveTo(-11, -2.3, -14, -1.05, -15.5, -.4);
+        context.bezierCurveTo(-11, -.1, -8, .3, -5, .6);
+        context.bezierCurveTo(-8.5, .95, -11, 1.55, -13.5, 2.1);
+        context.bezierCurveTo(-7.5, 3.35, -1, 2.85, 4, 1.85);
+        context.quadraticCurveTo(7, 1, 7, 0);
+        context.closePath();
+        context.fill();
+        context.beginPath();
+        context.arc(5.4, 0, 1.35, 0, Math.PI * 2);
+        context.fill();
+        context.beginPath();
+        context.moveTo(6.5, -.5);
+        context.lineTo(8.5, 0);
+        context.lineTo(6.5, .5);
+        context.closePath();
+        context.fill();
+        context.restore();
+    }
+
+    function paint(timestamp) {
+        context.clearRect(0, 0, width, height);
+        context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--theme-muted").trim() || "#49362e";
+        context.globalAlpha = 1;
+        for (const bird of [...flock].sort((a, b) => a.y - b.y)) drawSwallow(bird, timestamp);
+        context.globalAlpha = 1;
+    }
+
+    function stop() {
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+        previousTime = 0;
+        context.clearRect(0, 0, width, height);
+    }
+
+    function animate(timestamp) {
+        frame = null;
+        if (document.documentElement.dataset.skyScene !== "golden" || document.hidden || !intersectsViewport) {
+            stop();
+            return;
+        }
+        const dt = previousTime ? Math.min((timestamp - previousTime) / 1000, .04) : 0;
+        previousTime = timestamp;
+        elapsed += dt;
+        if (!reducedMotion.matches) {
+            moveLeader(dt);
+            moveFollowers(dt);
+        }
+        paint(elapsed);
+        if (!reducedMotion.matches) frame = requestAnimationFrame(animate);
+    }
+
+    function sync() {
+        if (document.documentElement.dataset.skyScene !== "golden" || document.hidden || !intersectsViewport) {
+            stop();
+            return;
+        }
+        if (frame !== null) cancelAnimationFrame(frame);
+        previousTime = 0;
+        if (reducedMotion.matches) {
+            paint(elapsed);
+            return;
+        }
+        frame = requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("pointermove", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+            pointer = null;
+            return;
+        }
+        pointer = {
+            x: (event.clientX - rect.left) / rect.width * width,
+            y: (event.clientY - rect.top) / rect.height * height,
+        };
+    }, { passive: true });
+    window.addEventListener("resize", () => {
+        resize();
+        sync();
+    }, { passive: true });
+    document.addEventListener("visibilitychange", sync);
+    reducedMotion.addEventListener?.("change", sync);
+    new MutationObserver(sync).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-sky-scene"],
+    });
+    if ("IntersectionObserver" in window) {
+        new IntersectionObserver(([entry]) => {
+            intersectsViewport = entry.isIntersecting;
+            sync();
+        }).observe(canvas);
+    }
+    resize();
+    sync();
+}
+
+function initializeStarfieldCanvas() {
+    const canvas = document.querySelector(".starfield-canvas");
+    const scene = document.querySelector(".nature-scene");
+    const svg = scene?.querySelector("svg");
+    const context = canvas?.getContext("2d", { alpha: true, desynchronized: true });
+    if (!canvas || !scene || !svg || !context) return;
+
+    const viewBox = svg.viewBox.baseVal;
+    const starsByScene = {};
+    for (const [sceneName, selector] of [["night", ".night-stars"], ["predawn", ".predawn-stars"]]) {
+        const sourceLayer = svg.querySelector(selector);
+        if (!sourceLayer) continue;
+
+        let index = 0;
+        starsByScene[sceneName] = [...sourceLayer.querySelectorAll("circle")].flatMap((circle) => {
+            const matrix = circle.getCTM();
+            if (!matrix) return [];
+            const point = svg.createSVGPoint();
+            point.x = Number(circle.getAttribute("cx") || 0);
+            point.y = Number(circle.getAttribute("cy") || 0);
+            const position = point.matrixTransform(matrix);
+            const sourceRadius = Number(circle.getAttribute("r") || 1);
+            const isConstellation = Boolean(circle.closest(".constellation"));
+            const scale = Math.hypot(matrix.a, matrix.b);
+            const radius = Math.max(0.35, sourceRadius * scale * (isConstellation ? 0.70 : 0.78));
+            const fill = getComputedStyle(circle).fill || "#eef3ff";
+            const star = {
+                x: position.x,
+                y: position.y,
+                radius,
+                color: fill,
+                glow: index % 10 < 3,
+                phase: (index * 2.399963229728653) % (Math.PI * 2),
+                rate: 0.002 + (index % 11) * 0.00024,
+                constellation: isConstellation,
+            };
+            index += 1;
+            return [star];
+        });
+        // The canvas now owns these points, so keep the SVG tree lean at runtime.
+        sourceLayer.remove();
+    }
+
+    let frame = null;
+    let lastPaint = 0;
+    let intersectsViewport = true;
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    let synchronizedScene = null;
+    let synchronizedActive = false;
+    let synchronizedReducedMotion = reducedMotion.matches;
+    let canvasWidth = viewBox.width;
+    let canvasHeight = viewBox.height;
+    let starfieldRotation = 0;
+    let previousRotationTimestamp = null;
+    function resizeCanvas() {
+        const bounds = svg.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = Math.round(bounds.width * pixelRatio);
+        canvas.height = Math.round(bounds.height * pixelRatio);
+        canvasWidth = viewBox.width;
+        canvasHeight = viewBox.height;
+        context.setTransform(canvas.width / canvasWidth, 0, 0, canvas.height / canvasHeight, 0, 0);
+        lastPaint = 0;
+    }
+
+    function paint(timestamp) {
+        const sceneName = document.documentElement.dataset.skyScene;
+        const stars = starsByScene[sceneName];
+        if (!stars || document.hidden || !intersectsViewport) return;
+        if (timestamp - lastPaint < 40 && lastPaint !== 0) return;
+        if (previousRotationTimestamp !== null) {
+            starfieldRotation = (starfieldRotation + (timestamp - previousRotationTimestamp) * (Math.PI * 2 / 3600000)) % (Math.PI * 2);
+        }
+        previousRotationTimestamp = timestamp;
+        lastPaint = timestamp;
+
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        const centerX = canvasWidth / 2;
+        const centerY = canvasHeight / 2;
+        const cosine = Math.cos(starfieldRotation);
+        const sine = Math.sin(starfieldRotation);
+
+        for (const star of stars) {
+            const wave = (Math.sin(timestamp * star.rate + star.phase) + 1) / 2;
+            const sizePulse = star.glow ? 0.88 + wave * 0.24 : 0.9 + wave * 0.2;
+            context.fillStyle = star.color;
+            const offsetX = star.x - centerX;
+            const offsetY = star.y - centerY;
+            const x = centerX + offsetX * cosine - offsetY * sine;
+            const y = centerY + offsetX * sine + offsetY * cosine;
+            context.globalAlpha = 0.34 + wave * 0.56;
+            context.shadowColor = star.glow ? star.color : "transparent";
+            context.shadowBlur = star.glow ? 2 + wave * 3 : 0;
+            context.beginPath();
+            context.arc(x, y, star.radius * sizePulse, 0, Math.PI * 2);
+            context.fill();
+        }
+    }
+
+    function stopStarfield() {
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+        lastPaint = 0;
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+    }
+
+    function animate(timestamp) {
+        frame = null;
+        const sceneName = document.documentElement.dataset.skyScene;
+        if (!starsByScene[sceneName] || document.hidden || !intersectsViewport) {
+            stopStarfield();
+            return;
+        }
+        paint(timestamp);
+        if (!reducedMotion.matches) frame = requestAnimationFrame(animate);
+    }
+
+    function syncStarfield(force = false) {
+        const sceneName = document.documentElement.dataset.skyScene;
+        const active = Boolean(starsByScene[sceneName]) && !document.hidden && intersectsViewport;
+        const motionReduced = reducedMotion.matches;
+        if (!force && sceneName === synchronizedScene && active === synchronizedActive && motionReduced === synchronizedReducedMotion) return;
+        synchronizedScene = sceneName;
+        synchronizedActive = active;
+        synchronizedReducedMotion = motionReduced;
+        if (!active) {
+            stopStarfield();
+            return;
+        }
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+        lastPaint = 0;
+        paint(performance.now());
+        if (!reducedMotion.matches) frame = requestAnimationFrame(animate);
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", () => {
+        resizeCanvas();
+        syncStarfield(true);
+    }, { passive: true });
+    document.addEventListener("visibilitychange", () => syncStarfield());
+    reducedMotion.addEventListener?.("change", () => syncStarfield(true));
+    new MutationObserver(() => syncStarfield()).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-sky-scene"],
+    });
+    if ("IntersectionObserver" in window) {
+        new IntersectionObserver(([entry]) => {
+            intersectsViewport = entry.isIntersecting;
+            syncStarfield();
+        }).observe(scene);
+    }
+    syncStarfield();
+}
+
 solarLocation = readSolarLocation();
 updateSky();
+initializeStarfieldCanvas();
+initializeSwallowCanvas();
 
 if (navigator.geolocation && !solarLocation) {
     navigator.geolocation.getCurrentPosition(

@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en" data-sky-scene="night">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121b2a">
+  <title>Starry Night — Animation Preview</title>
+  <style>
+:root{--sky-start:#121b2a;--sky-end:#293c5a;--theme-text:#eef2f7;--theme-accent:#bfd8c2}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0}
+body{min-height:100vh;min-height:100svh;overflow:hidden;background:linear-gradient(180deg,var(--sky-start),var(--sky-end))}
+/* Slow natural motifs shift with the selected time of day. */
+.nature-scene{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:0;overflow:visible;pointer-events:none;opacity:.38;transition:opacity 1.2s ease}
+.nature-scene svg{display:block;width:100%;height:100%;overflow:visible}
+.starfield-canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%;pointer-events:none}
+.nature-scene svg{position:relative;z-index:1}
+.nature-scene g[class^="scene-"]{opacity:0;transition:opacity 1.8s ease}
+html[data-sky-scene="night"] .scene-night,html[data-sky-scene="predawn"] .scene-predawn,html[data-sky-scene="dawn"] .scene-dawn,html[data-sky-scene="morning"] .scene-morning,html[data-sky-scene="noon"] .scene-noon,html[data-sky-scene="afternoon"] .scene-afternoon,html[data-sky-scene="dusk"] .scene-dusk{opacity:1}
+.nature-scene circle,.nature-scene path,.nature-scene ellipse{vector-effect:non-scaling-stroke}
+.night-stars,.predawn-stars{fill:#fff4ce}
+.constellation circle{fill:#fff}
+.night-stars circle,.predawn-stars circle{filter:none;animation:none;transform:scale(.74);transform-box:fill-box;transform-origin:center}
+.night-star-layout>circle:nth-of-type(11n+5),.predawn-stars>circle:nth-of-type(5n+2),.constellation circle:nth-child(5n+1){filter:drop-shadow(0 0 9px #dceaff) drop-shadow(0 0 21px #9bc9ff88)}
+.night-star-layout>circle:nth-of-type(7n+3),.predawn-stars>circle:nth-of-type(5n+4),.constellation circle:nth-child(4n+2){animation:preview-star-pulse 3.2s ease-in-out infinite}
+.night-star-layout>circle:nth-of-type(11n+8),.constellation circle:nth-child(6n+3){animation-delay:-1.6s;animation-duration:2.7s}
+.night-star-layout>circle:nth-of-type(8n+1),.predawn-stars>circle:nth-of-type(8n+1),.star-cluster circle:nth-child(5n+1){fill:#c6d9ff}
+.night-star-layout>circle:nth-of-type(8n+2),.predawn-stars>circle:nth-of-type(8n+2),.star-cluster circle:nth-child(5n+2){fill:#f0f3fb}
+.night-star-layout>circle:nth-of-type(8n+3),.predawn-stars>circle:nth-of-type(8n+3),.star-cluster circle:nth-child(5n+3){fill:#fff0d0}
+.night-star-layout>circle:nth-of-type(8n+4),.predawn-stars>circle:nth-of-type(8n+4),.star-cluster circle:nth-child(5n+4){fill:#f5f6ff}
+.night-star-layout>circle:nth-of-type(8n+5),.predawn-stars>circle:nth-of-type(8n+5),.star-cluster circle:nth-child(5n+5){fill:#a9c6ff}
+.night-star-layout>circle:nth-of-type(8n+6),.predawn-stars>circle:nth-of-type(8n+6){fill:#fff6e7}
+.night-star-layout>circle:nth-of-type(8n+7),.predawn-stars>circle:nth-of-type(8n+7){fill:#ffe2b5}
+.night-star-layout>circle:nth-of-type(8n+8),.predawn-stars>circle:nth-of-type(8n+8){fill:#e8efff}
+.shooting-star{fill:#fff0b8;stroke:none;opacity:0;transform-box:fill-box;transform-origin:center;animation:shooting-star var(--shoot-duration,15.81s) linear infinite}
+.shooting-star-art{transform-box:view-box;transform-origin:0 0}
+.shooting-star circle{fill:#fff1bd;filter:drop-shadow(0 0 1.2px #fff1bd) drop-shadow(0 0 3px #f4d28c)}.shooting-star-tail-glow{fill:none;stroke:#ffe9b0;stroke-width:.9;stroke-linecap:round;opacity:.13;filter:blur(.4px)}
+.shooting-star-tail{fill:url(#shooting-star-gradient);stroke:none;opacity:.96}.shooting-star-tail-reverse{fill:url(#shooting-star-gradient-reverse)}
+.shooting-star-two{animation-name:shooting-star-reverse;animation-delay:-9s;animation-duration:21.35s}
+.predawn-shooting-star{animation-name:shooting-star-reverse;animation-delay:-7s;animation-duration:18.18s}
+.predawn-bat-flight{transform-box:fill-box;transform-origin:center;animation:bat-drift 20s ease-in-out infinite}
+.predawn-bat-ears,.predawn-bat-wing,.predawn-bat-head{fill:var(--theme-text)}
+.predawn-bat-wing{transform-box:fill-box;animation:bat-wing-flap .22s ease-in-out infinite alternate}
+.bat-wing-left{transform-origin:right center}
+.bat-wing-right{transform-origin:left center}
+.bat-echo{fill:none;stroke:var(--theme-text);stroke-width:1.3;opacity:0;transform-box:fill-box;transform-origin:center;animation:bat-echo 1.2s linear infinite}
+.echo-two{animation-delay:.04s}
+.predawn-bat-head{fill:var(--theme-text)}
+.predawn-bugs .bug-body,.predawn-bugs .bug-wing{fill:var(--theme-text)}
+.predawn-bugs .bug-wing{transform-box:fill-box;transform-origin:center;animation:bug-wing-flap .18s ease-in-out infinite alternate}
+.bug-dot{opacity:.72;animation:bug-drift 4.6s ease-in-out infinite alternate}
+.predawn-bugs .bug-dot:nth-child(4){animation-delay:-1.8s}
+.predawn-bugs .bug-dot:nth-child(5){animation-delay:-3.1s}
+.bug-caught{opacity:.82;animation:bug-caught 2.3s ease-in-out infinite}
+.bug-two{animation-delay:1.15s}
+.footer-celestial{position:relative;height:180px;overflow:visible}
+.footer-celestial svg{display:block;width:100%;height:100%;overflow:visible}
+.celestial-orbit{fill:none;stroke:var(--theme-text);stroke-width:1.4;opacity:.2}
+.celestial-body{transition:opacity .5s linear}
+.celestial-sun{fill:#f4c58f}
+.sun-halo{opacity:.16}
+.sun-disc{opacity:1}
+.celestial-moon{fill:#e6e9ce}
+.morning-stems{fill:none;stroke:var(--theme-text);stroke-width:1.8;stroke-linecap:round;opacity:.8}
+.morning-flower-head{fill:none;stroke:var(--theme-text);stroke-width:1.7;opacity:.86}
+.buzzing-fly{fill:none;stroke:var(--theme-text);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fly-body{fill:var(--theme-text);stroke:none}
+.fly-legs{fill:none;stroke:var(--theme-text);stroke-width:1.2;stroke-linecap:round}
+.fly-vibration{fill:none;stroke:var(--theme-text);stroke-width:1.05;stroke-linecap:round;opacity:.28;animation:fly-buzz .2s steps(2,end) infinite alternate}
+.fly-wings{fill:none;stroke:var(--theme-text);stroke-width:1.45;stroke-linecap:round;transform-box:fill-box;transform-origin:center;animation:fly-wing .14s ease-in-out infinite alternate}
+.bee-abdomen,.bee-stripes,.bee-thorax,.bee-wings,.bee-antennae,.bee-legs{fill:none;stroke:var(--theme-text);stroke-linecap:round;stroke-linejoin:round}
+.bee-abdomen,.bee-thorax{stroke-width:1.4}
+.bee-stripes,.bee-antennae,.bee-legs{stroke-width:1.1}
+.bee-head{fill:var(--theme-text)}
+.bee-wings{stroke-width:1.2;transform-box:fill-box;transform-origin:center;animation:bee-wing-flap .16s ease-in-out infinite alternate}
+.fly-drift{transform-box:fill-box;transform-origin:center;animation:fly-drift 5.8s ease-in-out infinite}
+.fly-two{animation-delay:-1.4s;animation-duration:6.6s}
+.fly-three{animation-delay:-2.1s;animation-duration:5.9s}
+.fly-four{animation-delay:-.7s;animation-duration:6.8s}
+.fly-five{animation-delay:-3.3s;animation-duration:5.3s}
+.fly-six{animation-delay:-2.6s;animation-duration:6.3s}
+.butterfly{fill:none;stroke:var(--theme-text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transform-box:fill-box;transform-origin:center;animation:butterfly-drift 12s ease-in-out infinite alternate}
+.butterfly-two{animation-delay:-6s;animation-duration:14s}
+.butterfly-three{animation-delay:-3s;animation-duration:13s}
+.butterfly-four{animation-delay:-8s;animation-duration:15s}
+.butterfly-wing{transform-box:fill-box;transform-origin:center;animation:wing-flap .72s ease-in-out infinite alternate}
+.butterfly-body{stroke-width:1.6}
+.cicada-branch{fill:none;stroke:var(--theme-text);stroke-width:1.7;stroke-linecap:round;opacity:.32}
+.cicada-flight{transform-box:fill-box;transform-origin:center;animation:cicada-flight 5.4s ease-in-out infinite}
+.cicada-two{animation-delay:-1.7s;animation-duration:6s}
+.cicada-three{animation-delay:-3.2s;animation-duration:5s}
+.cicada-four{animation-delay:-2.4s;animation-duration:6.4s}
+.cicada-five{animation-delay:-4.1s;animation-duration:5.7s}
+.cicada-six{animation-delay:-.8s;animation-duration:4.8s}
+.cicada-body{fill:var(--theme-text);stroke:var(--theme-text);stroke-width:1.3}
+.cicada-wings,.cicada-legs{fill:none;stroke:var(--theme-text);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
+.cicada-wings{transform-box:fill-box;transform-origin:center;animation:wing-flap .14s ease-in-out infinite alternate}
+.cicada-echo{fill:none;stroke:var(--theme-text);stroke-width:1.3;stroke-linecap:round;opacity:0;transform-box:fill-box;transform-origin:center;animation:cicada-call 1.15s steps(2,end) infinite}
+.cicada-two .cicada-echo{animation-delay:.28s}
+.cicada-three .cicada-echo{animation-delay:.56s}
+.cicada-four .cicada-echo{animation-delay:.84s}
+.cicada-five .cicada-echo{animation-delay:.42s}
+.cicada-six .cicada-echo{animation-delay:.7s}
+.day-mote{fill:#fff0b8;opacity:.5;animation:star-twinkle 3s ease-in-out infinite alternate}
+.mote-two{animation-delay:1.5s}.mote-three{animation-delay:.8s}.mote-four{animation-delay:2s}.mote-five{animation-delay:1.2s}
+.cicada-ground{fill:none;stroke:var(--theme-accent);stroke-width:2;stroke-linecap:round;opacity:.48}
+.leaf-branch{fill:none;stroke:var(--theme-text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.simple-leaf{fill:none;stroke:var(--theme-text);stroke-width:1.7;stroke-linejoin:round}
+.leaf-vein{fill:none;stroke:var(--theme-text);stroke-width:1.2;stroke-linecap:round}
+.leaf-drift{transform-box:fill-box;transform-origin:center;animation:leaf-fall 7.5s ease-in-out infinite}
+.leaf-two{animation-delay:-2.2s;animation-duration:8.5s}
+.leaf-three{animation-delay:-4.6s;animation-duration:9s}
+.firefly{fill:#f5e6a0;filter:drop-shadow(0 0 9px #f6e8a4);transform-box:fill-box;transform-origin:center}
+.firefly circle:nth-of-type(1){animation:firefly-core 1.25s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+.firefly circle:nth-of-type(2){fill:#f5e6a0;opacity:.16;animation:firefly-halo 1.7s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.firefly-one{animation:firefly-wander-one 8s ease-in-out infinite}
+.firefly-two{animation:firefly-wander-two 10s ease-in-out infinite -2.4s}
+.firefly-three{animation:firefly-wander-three 9s ease-in-out infinite -4.5s}
+.firefly-four{animation:firefly-wander-four 11s ease-in-out infinite -6s}
+.firefly-five{animation:firefly-wander-five 8.5s ease-in-out infinite -1.7s}
+.firefly-six{animation:firefly-wander-six 9.5s ease-in-out infinite -3.8s}
+.firefly-seven{animation:firefly-wander-seven 7.8s ease-in-out infinite -5.2s}
+.firefly-eight{animation:firefly-wander-eight 10.5s ease-in-out infinite -7s}
+.firefly-nine{animation:firefly-wander-three 8.7s ease-in-out infinite -2.8s}
+.firefly-ten{animation:firefly-wander-two 9.2s ease-in-out infinite -6.4s}
+.firefly-dash{fill:none;stroke:#f5e6a0;stroke-width:1.2;stroke-linecap:round;opacity:.7}
+.firefly-dart{animation:firefly-dart 17s linear infinite -4.3s}
+.dusk-reeds{fill:none;stroke:var(--theme-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.58}
+@keyframes preview-star-pulse{0%,100%{transform:scale(.62);opacity:.58}50%{transform:scale(.86);opacity:1}}
+@keyframes star-twinkle{from{opacity:.22;transform:scale(.62)}to{opacity:1;transform:scale(1.52)}}
+to{filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 14px #8ecbff)}}
+to{transform:rotate(360deg)}}
+@keyframes shooting-star{0%,65.8%{opacity:0;transform:translate(0,0)}66%{opacity:1;transform:translate(0,0)}68%,100%{opacity:0;transform:translate(var(--shoot-x,1440px),var(--shoot-y,900px))}}
+@keyframes shooting-star-reverse{0%,65.8%{opacity:0;transform:translate(0,0)}66%{opacity:1;transform:translate(0,0)}68%,100%{opacity:0;transform:translate(-1440px,900px)}}14%,44%{opacity:.5}46%,100%{opacity:0}}
+@keyframes bat-drift{0%,100%{transform:translate(-940px,-190px) rotate(-8deg)}16%{transform:translate(-360px,-100px) rotate(12deg)}32%{transform:translate(190px,75px) rotate(-8deg)}48%{transform:translate(130px,390px) rotate(15deg)}64%{transform:translate(-550px,420px) rotate(-12deg)}82%{transform:translate(-1000px,180px) rotate(7deg)}}
+@keyframes bat-echo{0%{opacity:0;scale:.35}3%{opacity:.68}12%{opacity:0;scale:2.5}100%{opacity:0;scale:2.5}}
+@keyframes bat-wing-flap{from{rotate:-18deg}to{rotate:18deg}}
+@keyframes bug-wing-flap{from{scale:1 .7}to{scale:1 1.25}}
+@keyframes bug-drift{from{translate:0 0}to{translate:10px -7px}}
+@keyframes bug-caught{0%,39%,100%{opacity:.82;scale:1}47%,82%{opacity:0;scale:.35}90%{opacity:.82;scale:1}}
+@keyframes butterfly-drift{0%{translate:0 5px;rotate:-3deg}32%{translate:18px -10px;rotate:4deg}36%{translate:74px -42px;rotate:13deg}40%{translate:98px -5px;rotate:-5deg}62%{translate:28px 8px;rotate:2deg}66%{translate:58px -25px;rotate:8deg}70%{translate:38px 3px;rotate:-2deg}100%{translate:38px 3px;rotate:-2deg}}
+@keyframes wing-flap{from{scale:1 .9}to{scale:.88 1.05}}
+@keyframes fly-drift{0%,100%{transform:translate(0,0) rotate(-4deg)}18%{transform:translate(20px,-14px) rotate(5deg)}36%{transform:translate(42px,8px) rotate(-5deg)}48%{transform:translate(74px,-20px) rotate(9deg)}52%{transform:translate(58px,4px) rotate(-8deg)}72%{transform:translate(30px,24px) rotate(4deg)}88%{transform:translate(10px,-6px) rotate(-3deg)}}
+@keyframes fly-buzz{from{opacity:.2}to{opacity:.72}}
+@keyframes fly-wing{from{scale:1 .55}to{scale:.9 1.2}}
+@keyframes bee-wing-flap{from{scale:1 .65}to{scale:.78 1.2}}
+@keyframes cicada-call{0%,48%,100%{opacity:0;scale:.8}56%,70%{opacity:.72;scale:1.08}84%{opacity:0;scale:1.2}}
+@keyframes cicada-flight{0%,100%{transform:translate(0,0) rotate(-3deg)}20%{transform:translate(24px,-16px) rotate(7deg)}42%{transform:translate(55px,8px) rotate(-8deg)}58%{transform:translate(86px,-24px) rotate(11deg)}76%{transform:translate(46px,22px) rotate(-6deg)}90%{transform:translate(14px,-7px) rotate(4deg)}}
+@keyframes leaf-fall{0%{transform:translate(0,-24px) rotate(-18deg)}35%{transform:translate(-18px,42px) rotate(42deg)}62%{transform:translate(22px,92px) rotate(135deg)}66%{transform:translate(72px,74px) rotate(230deg)}70%{transform:translate(10px,112px) rotate(165deg)}100%{transform:translate(4px,168px) rotate(220deg)}}
+@keyframes firefly-core{from{opacity:.5;scale:.72}to{opacity:1;scale:1.3}}
+@keyframes firefly-halo{from{opacity:.24;scale:.45}to{opacity:0;scale:1.9}}
+@keyframes firefly-wander-one{0%,100%{transform:translate(0,0)}18%{transform:translate(26px,-22px)}38%{transform:translate(66px,-8px)}58%{transform:translate(54px,27px)}78%{transform:translate(16px,36px)}}
+@keyframes firefly-wander-two{0%,100%{transform:translate(0,0)}20%{transform:translate(-28px,-24px)}43%{transform:translate(-56px,5px)}63%{transform:translate(-22px,35px)}82%{transform:translate(18px,14px)}}
+@keyframes firefly-wander-three{0%,100%{transform:translate(0,0)}16%{transform:translate(28px,22px)}37%{transform:translate(8px,58px)}61%{transform:translate(-34px,36px)}82%{transform:translate(-22px,-12px)}}
+@keyframes firefly-wander-four{0%,100%{transform:translate(0,0)}22%{transform:translate(-38px,-16px)}44%{transform:translate(-24px,-56px)}66%{transform:translate(20px,-34px)}84%{transform:translate(30px,8px)}}
+@keyframes firefly-wander-five{0%,100%{transform:translate(0,0)}25%{transform:translate(36px,-35px)}50%{transform:translate(70px,6px)}75%{transform:translate(28px,44px)}}
+@keyframes firefly-wander-six{0%,100%{transform:translate(0,0)}20%{transform:translate(-34px,25px)}48%{transform:translate(-62px,-15px)}76%{transform:translate(-24px,-52px)}}
+@keyframes firefly-wander-seven{0%,100%{transform:translate(0,0)}18%{transform:translate(22px,-30px)}42%{transform:translate(-18px,-62px)}67%{transform:translate(-48px,-20px)}84%{transform:translate(-10px,20px)}}
+@keyframes firefly-wander-eight{0%,100%{transform:translate(0,0)}24%{transform:translate(-30px,-42px)}48%{transform:translate(18px,-70px)}72%{transform:translate(44px,-24px)}}
+@keyframes firefly-dart{0%,62%,100%{opacity:0;transform:translate(0,0)}64%{opacity:.9}66%{opacity:1;transform:translate(150px,-90px)}68%{opacity:1;transform:translate(330px,24px)}70%{opacity:0;transform:translate(430px,-68px)}}
+@media(prefers-reduced-motion:reduce){.nature-scene *{animation:none!important;scroll-behavior:auto!important}}
+
+.nature-scene{position:relative;top:auto;left:auto;width:100%;height:100vh;height:100svh;opacity:1;z-index:auto}
+</style>
+</head>
+<body>
+  <main class="nature-scene" aria-label="Starry Night animation">
+    <canvas class="starfield-canvas" aria-hidden="true"></canvas>
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="shooting-star-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff3cf" stop-opacity="0"/><stop offset="76%" stop-color="#ffe6aa" stop-opacity=".08"/><stop offset="94%" stop-color="#ffd27a" stop-opacity=".48"/><stop offset="100%" stop-color="#fff0bb" stop-opacity="1"/></linearGradient><linearGradient id="shooting-star-gradient-reverse" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff3cf" stop-opacity="0"/><stop offset="76%" stop-color="#ffe6aa" stop-opacity=".08"/><stop offset="94%" stop-color="#ffd27a" stop-opacity=".48"/><stop offset="100%" stop-color="#fff0bb" stop-opacity="1"/></linearGradient><g id="dawn-bee"><g class="buzzing-fly"><path class="fly-vibration" d="M-22-5Q-16 0-22 5M-28-9Q-18 0-28 9M22-5Q16 0 22 5M28-9Q18 0 28 9" /><path class="bee-wings" d="M-2-2Q-9-12-13-6Q-13-2-3 1M0-2Q2-13 8-9Q10-5 3 0" /><ellipse class="bee-abdomen" cx="-4" cy="0" rx="5.2" ry="3.1" /><path class="bee-stripes" d="M-6-2.3v4.6M-2-3v6" /><ellipse class="bee-thorax" cx="2.5" cy="0" rx="3.2" ry="3.5" /><circle class="bee-head" cx="7" cy="0" r="2.7" /><path class="bee-antennae" d="M7-2q1-4 3-4m-1 4q3-3 5-2" /><path class="bee-legs" d="m-3 2-4 4m3-5-5 1m10 1 1 4m2-5 4 3" /></g></g><g id="singing-cicada"><path class="cicada-echo" d="M-7-4Q-15 0-7 4M7-4Q15 0 7 4M-8-9Q-21 0-8 9M8-9Q21 0 8 9" /><path class="cicada-wings" d="M-2-2Q-8-17-18-10Q-18-2-4 3M2-2Q8-17 18-10Q18-2 4 3" /><ellipse class="cicada-body" cy="0" rx="3.5" ry="8" /><circle class="cicada-body" cy="-8" r="3" /><path class="cicada-legs" d="M-2 4-8 9m10-5 6 5m-7-13-4-6m6 6 4-6" /></g></defs>
+            <g class="scene-night">
+                <g class="night-stars"><g class="night-star-layout" transform="translate(-43.2 -27) scale(1.06)"><circle cx="165" cy="168" r="1.16" /><circle cx="348" cy="285" r="0.87" /><circle cx="582" cy="137" r="0.87" /><circle cx="892" cy="228" r="1.16" /><circle cx="1134" cy="122" r="0.87" /><circle cx="1300" cy="292" r="1.16" /><circle cx="1040" cy="394" r="0.59" /><circle cx="490" cy="355" r="0.87" /><circle cx="760" cy="90" r="0.75" /><circle cx="1380" cy="165" r="0.81" /><circle cx="720" cy="470" r="0.7" /><circle cx="92" cy="360" r="0.7" /><circle cx="280" cy="78" r="0.93" /><circle cx="445" cy="210" r="0.59" /><circle cx="675" cy="320" r="0.81" /><circle cx="820" cy="105" r="0.7" /><circle cx="985" cy="338" r="0.87" /><circle cx="1210" cy="430" r="0.64" /><circle cx="1365" cy="510" r="0.81" /><circle cx="560" cy="500" r="0.59" /><circle cx="45" cy="100" r="0.81" /><circle cx="730" cy="260" r="0.7" /><circle cx="1400" cy="370" r="0.87" /><circle cx="75" cy="545" r="0.7" /><circle cx="790" cy="540" r="0.81" /><circle cx="1330" cy="610" r="0.75" /><circle cx="505" cy="50" r="0.7" /><circle cx="1100" cy="530" r="0.64" /><circle cx="340" cy="690" r="0.87" /><circle cx="740" cy="760" r="0.99" /><circle cx="1160" cy="700" r="0.75" /><circle cx="80" cy="790" r="0.81" /><circle cx="1360" cy="820" r="0.93" /><circle cx="804.72" cy="820.51" r="0.51" /><circle cx="563.58" cy="556.01" r="0.80" /><circle cx="238.11" cy="97.57" r="0.49" /><circle cx="1151.62" cy="219.25" r="0.61" /><circle cx="1275.88" cy="828.58" r="0.74" /><circle cx="868.89" cy="814.61" r="0.79" /><circle cx="1096.60" cy="754.47" r="0.65" /><circle cx="602.15" cy="677.43" r="0.78" /><circle cx="1198.06" cy="119.87" r="0.69" /><circle cx="1345.09" cy="78.57" r="0.72" /><circle cx="172.09" cy="713.92" r="0.48" /><circle cx="747.64" cy="398.68" r="0.62" /><circle cx="807.97" cy="184.86" r="0.73" /><circle cx="235.21" cy="607.03" r="0.77" /><circle cx="112.58" cy="441.57" r="0.45" /><circle cx="519.87" cy="694.30" r="0.79" /><circle cx="430.61" cy="65.94" r="0.52" /><circle cx="994.65" cy="176.76" r="0.78" /><circle cx="1064.59" cy="205.99" r="0.70" /><circle cx="458.45" cy="625.32" r="0.61" /><circle cx="1229.40" cy="690.25" r="0.46" /><circle cx="130.50" cy="619.73" r="0.62" /><circle cx="926.75" cy="158.85" r="0.54" /><circle cx="960.46" cy="81.87" r="0.52" /><circle cx="1336.41" cy="698.53" r="0.45" /><circle cx="1202.96" cy="295.37" r="0.60" /><circle cx="443.11" cy="754.95" r="0.73" /><circle cx="1148.69" cy="313.70" r="0.60" /><circle cx="808.10" cy="370.31" r="0.82" /><circle cx="600.81" cy="605.31" r="0.60" /><circle cx="821.49" cy="764.39" r="0.70" /><circle cx="995.19" cy="246.43" r="0.48" /><circle cx="1282.90" cy="748.84" r="0.77" /><circle cx="1119.72" cy="808.26" r="0.67" /><circle cx="190.24" cy="829.57" r="0.47" /><circle cx="1338.02" cy="324.01" r="0.51" /><circle cx="633.06" cy="794.15" r="0.55" /><circle cx="1032.75" cy="780.20" r="0.49" /><circle cx="896.60" cy="76.49" r="0.79" /><circle cx="257.39" cy="749.21" r="0.58" /><circle cx="650.15" cy="87.38" r="0.46" /><circle cx="430.10" cy="683.43" r="0.76" /><g class="star-cluster"><circle cx="210" cy="235" r="1.39" /><circle cx="238" cy="218" r="1.1" /><circle cx="266" cy="226" r="1.27" /><circle cx="286" cy="250" r="1.04" /><circle cx="318" cy="255" r="1.39" /></g><g class="star-cluster cluster-two"><circle cx="935" cy="390" r="1.27" /><circle cx="962" cy="365" r="0.99" /><circle cx="990" cy="377" r="1.22" /><circle cx="1008" cy="405" r="1.04" /><circle cx="1036" cy="396" r="1.27" /></g><g class="constellation constellation-ursa" transform="translate(248.61 470.25) scale(1.5) translate(-248.61 -470.25)"><circle cx="256.43" cy="461.24" r="1.19" style="fill:#eef3ff"/><circle cx="316.94" cy="432.93" r="1.53" style="fill:#ffe1ad"/><circle cx="318.53" cy="465.14" r="1.41" style="fill:#c9dcff"/><circle cx="274.66" cy="481.27" r="1.40" style="fill:#c9dcff"/><circle cx="223.85" cy="467.68" r="1.55" style="fill:#c9dcff"/><circle cx="198.62" cy="473.88" r="1.44" style="fill:#eef3ff"/><circle cx="178.69" cy="507.56" r="1.52" style="fill:#c9dcff"/></g><g class="constellation constellation-orion" transform="translate(1224.20 503.09) scale(1.5) translate(-1224.20 -503.09)"><circle cx="1177.73" cy="454.81" r="0.93" style="fill:#c9dcff"/><circle cx="1194.44" cy="426.72" r="0.94" style="fill:#fff1d4"/><circle cx="1182.36" cy="427.43" r="0.88" style="fill:#eef3ff"/><circle cx="1172.20" cy="457.67" r="0.92" style="fill:#c9dcff"/><circle cx="1184.31" cy="480.93" r="1.00" style="fill:#eef3ff"/><circle cx="1193.44" cy="492.36" r="1.85" style="fill:#e98574"/><circle cx="1231.50" cy="497.75" r="1.57" style="fill:#a9c4ff"/><circle cx="1269.81" cy="478.36" r="0.88" style="fill:#eef3ff"/><circle cx="1265.18" cy="521.39" r="0.92" style="fill:#ffe1ad"/><circle cx="1270.62" cy="517.69" r="1.09" style="fill:#c9dcff"/><circle cx="1274.48" cy="501.55" r="1.10" style="fill:#c9dcff"/><circle cx="1276.21" cy="494.63" r="1.22" style="fill:#fff1d4"/><circle cx="1275.23" cy="484.74" r="0.95" style="fill:#c9dcff"/><circle cx="1267.94" cy="461.21" r="1.01" style="fill:#ffe1ad"/><circle cx="1257.55" cy="451.57" r="0.88" style="fill:#c9dcff"/><circle cx="1251.05" cy="450.59" r="0.84" style="fill:#eef3ff"/><circle cx="1244.92" cy="571.96" r="1.90" style="fill:#c9dcff"/><circle cx="1232.33" cy="542.36" r="1.18" style="fill:#a9c4ff"/><circle cx="1222.79" cy="531.66" r="1.43" style="fill:#c9dcff"/><circle cx="1218.82" cy="479.47" r="1.17" style="fill:#c9dcff"/><circle cx="1211.70" cy="540.04" r="1.55" style="fill:#c9dcff"/><circle cx="1202.84" cy="579.45" r="1.47" style="fill:#c9dcff"/><circle cx="1217.46" cy="536.26" r="1.56" style="fill:#c9dcff"/></g><g class="constellation constellation-gemini" transform="translate(546.38 254.88) scale(1.5) translate(-546.38 -254.88)"><circle cx="608.87" cy="254.19" r="1.19" style="fill:#ffe1ad"/><circle cx="597.70" cy="254.15" r="1.29" style="fill:#ffe1ad"/><circle cx="568.72" cy="238.44" r="1.24" style="fill:#ffe1ad"/><circle cx="531.12" cy="207.76" r="0.94" style="fill:#ffe1ad"/><circle cx="498.71" cy="197.90" r="1.59" style="fill:#c9dcff"/><circle cx="483.89" cy="221.07" r="1.68" style="fill:#ffd693"/><circle cx="496.88" cy="227.86" r="1.01" style="fill:#ffe1ad"/><circle cx="518.71" cy="257.34" r="1.14" style="fill:#fff1d4"/><circle cx="540.84" cy="265.81" r="1.03" style="fill:#ffd693"/><circle cx="577.32" cy="290.83" r="1.51" style="fill:#c9dcff"/><circle cx="566.84" cy="311.86" r="1.18" style="fill:#fff1d4"/><circle cx="521.51" cy="289.99" r="1.13" style="fill:#eef3ff"/></g><g class="constellation constellation-virgo" transform="translate(783.37 612.03) scale(1.5) translate(-783.37 -612.03)"><circle cx="882.57" cy="582.85" r="1.02" style="fill:#ffe1ad"/><circle cx="877.25" cy="603.82" r="1.12" style="fill:#fff1d4"/><circle cx="845.12" cy="614.52" r="1.06" style="fill:#c9dcff"/><circle cx="821.19" cy="617.96" r="1.32" style="fill:#fff1d4"/><circle cx="790.08" cy="635.95" r="0.94" style="fill:#c9dcff"/><circle cx="773.31" cy="660.69" r="1.73" style="fill:#a9c4ff"/><circle cx="717.41" cy="637.98" r="1.01" style="fill:#fff1d4"/><circle cx="687.66" cy="636.48" r="1.06" style="fill:#fff1d4"/><circle cx="798.63" cy="563.36" r="1.29" style="fill:#ffd693"/><circle cx="805.86" cy="596.63" r="1.17" style="fill:#ffe1ad"/><circle cx="762.86" cy="614.20" r="1.17" style="fill:#eef3ff"/><circle cx="733.22" cy="604.79" r="0.97" style="fill:#eef3ff"/><circle cx="684.16" cy="603.25" r="1.09" style="fill:#c9dcff"/></g><g class="constellation constellation-libra" transform="translate(1000.08 584.18) scale(1.5) translate(-1000.08 -584.18)"><circle cx="1017.74" cy="624.09" r="1.20" style="fill:#ffe1ad"/><circle cx="1039.54" cy="559.41" r="1.31" style="fill:#eef3ff"/><circle cx="996.37" cy="512.80" r="1.35" style="fill:#c9dcff"/><circle cx="965.78" cy="550.64" r="1.05" style="fill:#ffd693"/><circle cx="963.31" cy="644.06" r="1.12" style="fill:#ffe1ad"/><circle cx="960.61" cy="655.56" r="1.11" style="fill:#c9dcff"/></g></g></g>
+                <g transform="translate(185 88)"><g class="shooting-star"><path class="shooting-star-tail-glow" d="M-221 -138L0 0"/><path class="shooting-star-tail" d="M-221 -138L0 0L0.85 -1.36L-220.32 -139.06Z"/><circle r="1.28"/></g></g>
+                <g transform="translate(1000 170)"><g class="shooting-star shooting-star-two"><path class="shooting-star-tail-glow" d="M221 -138L0 0"/><path class="shooting-star-tail shooting-star-tail-reverse" d="M221 -138L0 0L-0.85 -1.36L220.32 -139.06Z"/><circle r="1.28"/></g></g>
+
+            </g>
+
+                
+            </svg>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector(".starfield-canvas");
+      const svg = document.querySelector(".nature-scene svg");
+      const source = svg.querySelector(".night-stars");
+      const context = canvas.getContext("2d", { alpha: true, desynchronized: true });
+      const viewBox = svg.viewBox.baseVal;
+      const screenToSvg = svg.getScreenCTM().inverse();
+      let rotation = 0;
+      let previousTime = null;
+
+      const backgroundStars = [...source.querySelectorAll("circle")].filter((circle) => !circle.closest(".constellation")).flatMap((circle, index) => {
+        const elementToScreen = circle.getScreenCTM();
+        if (!elementToScreen) return [];
+        const matrix = screenToSvg.multiply(elementToScreen);
+        const point = svg.createSVGPoint();
+        point.x = Number(circle.getAttribute("cx") || 0);
+        point.y = Number(circle.getAttribute("cy") || 0);
+        const position = point.matrixTransform(matrix);
+        const scale = Math.hypot(matrix.a, matrix.b);
+        return [{
+          x: position.x,
+          y: position.y,
+          radius: Math.max(.35, Number(circle.getAttribute("r") || 1) * scale * .78),
+          color: getComputedStyle(circle).fill || "#eef3ff",
+          glow: index % 10 < 3,
+          phase: (index * 2.399963229728653) % (Math.PI * 2),
+          rate: .002 + (index % 11) * .00024,
+        }];
+      });
+      // d3-celestial (Olaf Frohn), IAU-style western constellation line figures.
+      const constellationPaths = {"Ursa Major":[[[-176.1435,57.0326,3.32,0.077],[165.932,61.751,1.81,1.061],[165.4603,56.3824,2.34,0.033],[178.4577,53.6948,2.41,0.044],[-176.1435,57.0326,3.32,0.077],[-166.4927,55.9598,1.76,-0.022],[-159.0186,54.9254,2.23,0.057],[-153.1148,49.3133,1.85,-0.099]],[[178.4577,53.6948,2.41,0.044],[176.5126,47.7794,3.69,1.181],[169.6197,33.0943,3.49,1.4],[169.5468,31.5308,3.79,0.606]],[[176.5126,47.7794,3.69,1.181],[167.4159,44.4985,3,1.144],[155.5823,41.4995,3.06,1.603]],[[167.4159,44.4985,3,1.144],[154.2741,42.9144,3.45,0.029]],[[165.932,61.751,1.81,1.061],[142.8821,63.0619,3.65,0.36],[127.5661,60.7182,3.35,0.856],[147.7473,59.0387,3.78,0.291],[165.4603,56.3824,2.34,0.033]],[[165.4603,56.3824,2.34,0.033],[148.0265,54.0643,4.55,0.038],[143.2143,51.6773,3.17,0.475],[134.8019,48.0418,3.12,0.223]],[[135.9064,47.1565,3.57,0.007],[143.2143,51.6773,3.17,0.475]]],"Orion":[[[91.893,14.7685,4.42,-0.164],[88.5958,20.2762,4.39,0.594],[90.9799,20.1385,4.64,0.236],[92.985,14.2088,4.45,-0.18],[90.5958,9.6473,4.12,0.17],[88.7929,7.4071,0.45,1.5],[81.2828,6.3497,1.64,-0.224],[73.7239,10.1508,4.64,0.085]],[[74.6371,1.714,4.47,1.369],[73.5629,2.4407,3.71,-0.179],[72.8015,5.6051,3.68,-0.157],[72.46,6.9613,3.19,0.484],[72.653,8.9002,4.35,0.01],[73.7239,10.1508,4.64,0.085],[74.0928,13.5145,4.06,1.158],[76.1423,15.4041,4.65,-0.064],[77.4248,15.5972,4.81,0.313]],[[78.6345,-8.2016,0.18,-0.03],[81.1192,-2.3971,3.35,-0.24],[83.0017,-0.2991,2.25,-0.175],[81.2828,6.3497,1.64,-0.224],[83.7845,9.9342,3.39,-0.16],[88.7929,7.4071,0.45,1.5],[85.1897,-1.9426,1.74,-0.199],[86.9391,-9.6696,2.07,-0.168]],[[85.1897,-1.9426,1.74,-0.199],[84.0534,-1.2019,1.69,-0.184],[83.0017,-0.2991,2.25,-0.175]]],"Gemini":[[[93.7194,22.5068,3.31,1.6],[95.7401,22.5136,2.87,1.621],[100.983,25.1311,3.06,1.377],[107.7849,30.2452,4.41,1.261],[113.6494,31.8883,1.58,0.034],[116.329,28.0262,1.16,0.991],[113.9806,26.8957,4.06,1.54],[110.0307,21.9823,3.5,0.374],[106.0272,20.5703,4.01,0.899],[99.4279,16.3993,1.93,0.001],[101.3224,12.8956,3.35,0.443]],[[110.0307,21.9823,3.5,0.374],[109.5232,16.5404,3.58,0.106]]],"Virgo":[[[176.4648,6.5294,4.04,1.501],[177.6738,1.7647,3.59,0.518],[-175.0235,-0.6668,3.89,0.026],[-169.5848,-1.4494,2.74,0.368],[-162.5125,-5.539,4.38,-0.008],[-158.7018,-11.1613,0.98,-0.235],[-145.9964,-6.0005,4.07,0.511],[-139.2349,-5.6582,3.87,0.385]],[[-164.4558,10.9592,2.85,0.934],[-166.0991,3.3975,3.39,1.571],[-169.5848,-1.4494,2.74,0.368]],[[-162.5125,-5.539,4.38,-0.008],[-156.3267,-0.5958,3.38,0.114],[-149.5884,1.5445,4.23,0.121],[-138.4378,1.8929,3.73,-0.005]]],"Libra":[[[-133.9824,-25.282,3.25,1.674],[-137.2804,-16.0418,2.75,0.147],[-130.7483,-9.3829,2.61,-0.071],[-126.1184,-14.7895,3.91,1.007],[-125.744,-28.1351,3.6,1.361],[-125.336,-29.7778,3.66,-0.177]],[[-137.2804,-16.0418,2.75,0.147],[-126.1184,-14.7895,3.91,1.007]]]};
+      const colorFromBV = (bv) => bv < -.15 ? "#c9dcff" : bv < .15 ? "#eef3ff" : bv < .45 ? "#fff1d4" : bv < .9 ? "#ffe1ad" : "#ffc98c";
+      const pointKey = (point) => `${point[0].toFixed(4)},${point[1].toFixed(4)}`;
+      const pointByKey = new Map();
+      const dipperStarKeys = new Set(constellationPaths["Ursa Major"][0].map(pointKey));
+      for (const [name, paths] of Object.entries(constellationPaths)) {
+        paths.forEach((path, pathIndex) => {
+          const points = path.map((point) => {
+            const key = pointKey(point);
+            if (!pointByKey.has(key)) pointByKey.set(key, { id: key, lon: point[0], dec: point[1], mag: point[2], bv: point[3] });
+            return pointByKey.get(key);
+          });
+        });
+      }
+      const constellationStars = [...pointByKey.values()];
+      const radians = Math.PI / 180;
+      const centerRa = 10.3 * 15 * radians;
+      const centerDec = 20 * radians;
+      const projected = constellationStars.map((star) => {
+        const ra = ((star.lon + 360) % 360) * radians;
+        const dec = star.dec * radians;
+        const deltaRa = ra - centerRa;
+        const denominator = 1 + Math.sin(centerDec) * Math.sin(dec) + Math.cos(centerDec) * Math.cos(dec) * Math.cos(deltaRa);
+        const factor = 2 / denominator;
+        return { ...star, x: -factor * Math.cos(dec) * Math.sin(deltaRa), y: -factor * (Math.cos(centerDec) * Math.sin(dec) - Math.sin(centerDec) * Math.cos(dec) * Math.cos(deltaRa)) };
+      });
+      const projectedBounds = {
+        minX: Math.min(...projected.map((star) => star.x)),
+        maxX: Math.max(...projected.map((star) => star.x)),
+        minY: Math.min(...projected.map((star) => star.y)),
+        maxY: Math.max(...projected.map((star) => star.y)),
+      };
+      const projectedCenterX = (projectedBounds.minX + projectedBounds.maxX) / 2;
+      const projectedCenterY = (projectedBounds.minY + projectedBounds.maxY) / 2;
+      const projectedScale = Math.min(viewBox.width * .9 / (projectedBounds.maxX - projectedBounds.minX), viewBox.height * .82 / (projectedBounds.maxY - projectedBounds.minY));
+      projected.forEach((star, index) => Object.assign(star, {
+        x: viewBox.width / 2 + (star.x - projectedCenterX) * projectedScale,
+        y: viewBox.height / 2 + (star.y - projectedCenterY) * projectedScale,
+        radius: .68 + Math.max(0, 3.5 - star.mag) * .18 + (dipperStarKeys.has(star.id) ? .24 : 0),
+        color: colorFromBV(star.bv),
+        glow: dipperStarKeys.has(star.id) || index % 3 === 0,
+        phase: (index * 2.399963229728653) % (Math.PI * 2),
+        rate: .002 + (index % 11) * .00024,
+      }));
+      const stars = [...backgroundStars, ...projected];
+      source.remove();
+      const shootingStars = [...svg.querySelectorAll(".scene-night .shooting-star")];
+      let previousShootingStar = -1;
+
+      function scheduleShootingStar(initial = false) {
+        if (shootingStars.length === 0) return;
+        const options = shootingStars.map((star, index) => ({ star, index })).filter(({ index }) => index !== previousShootingStar);
+        const selected = options[Math.floor(Math.random() * options.length)];
+        const { star, index } = selected;
+        previousShootingStar = index;
+        const wrapper = star.parentElement;
+        const reverseTail = star.classList.contains("shooting-star-two");
+        const direction = Math.random() < .5 ? 1 : -1;
+        const startX = direction > 0 ? -Math.random() * 180 : viewBox.width + Math.random() * 180;
+        const startY = Math.random() * viewBox.height * .48 - 60;
+        const endX = direction > 0
+          ? viewBox.width + Math.random() * 260
+          : -Math.random() * 260;
+        const endY = viewBox.height * (.58 + Math.random() * .55);
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const trailAngle = reverseTail ? 148 : 32;
+        const travelDuration = 200 + Math.random() * 1200;
+        const speedFactor = (1400 - travelDuration) / 1200;
+        const tailScale = .42 + speedFactor * .4 + Math.random() * .1;
+        let art = star.querySelector(".shooting-star-art");
+        let tail = star.querySelector(".shooting-star-tail-art");
+        if (!art) {
+          art = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          art.setAttribute("class", "shooting-star-art");
+          tail = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          tail.setAttribute("class", "shooting-star-tail-art");
+          for (const child of [...star.childNodes]) {
+            if (child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === "path") tail.appendChild(child);
+            else art.appendChild(child);
+          }
+          art.insertBefore(tail, art.firstChild);
+          star.appendChild(art);
+        }
+        wrapper.setAttribute("transform", `translate(${startX.toFixed(1)} ${startY.toFixed(1)})`);
+        art.setAttribute("transform", `rotate(${(angle - trailAngle).toFixed(1)} 0 0)`);
+        tail.setAttribute("transform", `scale(${tailScale.toFixed(2)})`);
+        star.style.animation = "none";
+        star.style.opacity = "0";
+        const wait = initial ? Math.random() * 5000 : 3000 + Math.random() * 9000;
+        setTimeout(() => {
+          const animation = star.animate([
+            { opacity: 0, transform: "translate(0px, 0px)", offset: 0 },
+            { opacity: 1, transform: "translate(0px, 0px)", offset: .08 },
+            { opacity: 1, transform: `translate(${(dx * .88).toFixed(1)}px, ${(dy * .88).toFixed(1)}px)`, offset: .82 },
+            { opacity: 0, transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, offset: 1 },
+          ], { duration: travelDuration, easing: "linear", fill: "forwards" });
+          animation.onfinish = () => {
+            animation.cancel();
+            scheduleShootingStar();
+          };
+        }, wait);
+      }
+
+      scheduleShootingStar(true);
+
+      function resize() {
+        const rect = svg.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const ratio = Math.min(devicePixelRatio || 1, 1.5);
+        canvas.width = Math.round(rect.width * ratio);
+        canvas.height = Math.round(rect.height * ratio);
+        context.setTransform(canvas.width / viewBox.width, 0, 0, canvas.height / viewBox.height, 0, 0);
+      }
+
+      function draw(time) {
+        if (previousTime !== null) rotation = (rotation + (time - previousTime) * Math.PI * 2 / 1800000) % (Math.PI * 2);
+        previousTime = time;
+        context.clearRect(0, 0, viewBox.width, viewBox.height);
+        const centerX = viewBox.width / 2;
+        const centerY = viewBox.height / 2;
+        const cosine = Math.cos(rotation);
+        const sine = Math.sin(rotation);
+        for (const star of stars) {
+          const wave = (Math.sin(time * star.rate + star.phase) + 1) / 2;
+          const dx = star.x - centerX;
+          const dy = star.y - centerY;
+          const x = centerX + dx * cosine - dy * sine;
+          const y = centerY + dx * sine + dy * cosine;
+          context.fillStyle = star.color;
+          context.globalAlpha = .34 + wave * .56;
+          context.shadowColor = star.glow ? star.color : "transparent";
+          context.shadowBlur = star.glow ? 2.4 + wave * 3.4 : 0;
+          context.beginPath();
+          context.arc(x, y, star.radius * (.9 + wave * .2), 0, Math.PI * 2);
+          context.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      resize();
+      addEventListener("resize", resize, { passive: true });
+      requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>
