@@ -18,6 +18,8 @@ let selectedPaletteKey = null;
 let simulationRunning = false;
 let simulationStartedAt = 0;
 let simulationElapsed = 0;
+let simulationStartMinutes = null;
+let simulationStartSceneIndex = 0;
 let simulationFrame = null;
 let hasInitializedSky = false;
 const simulatedDayDuration = 240_000;
@@ -263,6 +265,15 @@ function paletteAt(time) {
     return result;
 }
 
+function paletteSceneAt(time, stops) {
+    const upperIndex = stops.findIndex((stop) => stop.time > time);
+    const lower = stops[Math.max(0, upperIndex - 1)];
+    const upper = stops[Math.min(stops.length - 1, upperIndex < 0 ? stops.length - 1 : upperIndex)];
+    const amount = Math.max(0, Math.min(1, (time - lower.time) / (upper.time - lower.time || 1)));
+    const palette = amount < 0.5 ? lower.palette : upper.palette;
+    return Object.keys(palettes).find((key) => palettes[key] === palette) || "night";
+}
+
 function applyPalette(palette, logoHueOverride = null) {
     lastAppliedPalette = palette;
     const values = {
@@ -344,6 +355,16 @@ if (celestialTrack && "ResizeObserver" in window) {
 function setSkyScene(nextScene) {
     const root = document.documentElement;
     const previousScene = root.dataset.skyScene;
+    if (root.dataset.skyInitializing === "true") {
+        if (skySceneTransitionTimer !== null) clearTimeout(skySceneTransitionTimer);
+        skySceneTransitionTimer = null;
+        delete root.dataset.skyTransitionFrom;
+        delete root.dataset.skyTransitionStartedAt;
+        delete root.dataset.skyTransitionDuration;
+        delete root.dataset.skyTransitioning;
+        root.dataset.skyScene = nextScene;
+        return;
+    }
     if (previousScene === nextScene) return;
 
     if (skySceneTransitionTimer !== null) clearTimeout(skySceneTransitionTimer);
@@ -385,15 +406,17 @@ function updateSky() {
     const time = previewMinutes === null ? localMinutes(now) : previewMinutes;
     const isDaySimulation = simulationRunning || simulationElapsed > 0;
     const stops = paletteStops(now);
-    const activeStop = stops.reduce((active, stop) => stop.time <= time ? stop : active, stops[0]);
-    const simulationSceneIndex = Math.min(
-        simulationSceneOrder.length - 1,
-        Math.floor((time / 1440) * simulationSceneOrder.length),
-    );
+    const simulationElapsedNow = simulationRunning
+        ? simulationElapsed + performance.now() - simulationStartedAt
+        : simulationElapsed;
+    const simulationSceneIndex = (
+        simulationStartSceneIndex
+        + Math.floor((simulationElapsedNow / simulatedDayDuration) * simulationSceneOrder.length)
+    ) % simulationSceneOrder.length;
     const activeScene = selectedPaletteKey
         || (isDaySimulation
             ? simulationSceneOrder[simulationSceneIndex]
-            : Object.keys(palettes).find((key) => palettes[key] === activeStop.palette) || "night");
+            : paletteSceneAt(time, stops));
     const palette = selectedPaletteKey
         ? palettes[selectedPaletteKey]
         : isDaySimulation ? palettes[activeScene] : paletteAt(time);
@@ -428,6 +451,13 @@ function updateSky() {
     }
 }
 
+function updateSkyImmediately() {
+    const root = document.documentElement;
+    root.dataset.skyInitializing = "true";
+    updateSky();
+    requestAnimationFrame(() => requestAnimationFrame(() => delete root.dataset.skyInitializing));
+}
+
 function resetSimulationButton() {
     if (!simulationButton || !simulationLabel) return;
     simulationButton.setAttribute("aria-pressed", "false");
@@ -451,7 +481,7 @@ function advanceDaySimulation(timestamp) {
     if (!simulationRunning) return;
     const elapsed = simulationElapsed + timestamp - simulationStartedAt;
     const progress = Math.min(1, elapsed / simulatedDayDuration);
-    previewMinutes = progress * 1440;
+    previewMinutes = (simulationStartMinutes + progress * 1440) % 1440;
     selectedPaletteKey = null;
     updateSky();
 
@@ -474,7 +504,11 @@ simulationButton?.addEventListener("click", () => {
     if (simulationElapsed >= simulatedDayDuration) {
         simulationElapsed = 0;
     }
-    previewMinutes = (simulationElapsed / simulatedDayDuration) * 1440;
+    if (simulationElapsed === 0) {
+        simulationStartMinutes = previewMinutes ?? localMinutes(new Date());
+        simulationStartSceneIndex = Math.max(0, simulationSceneOrder.indexOf(document.documentElement.dataset.skyScene));
+    }
+    previewMinutes = (simulationStartMinutes + (simulationElapsed / simulatedDayDuration) * 1440) % 1440;
     selectedPaletteKey = null;
     simulationStartedAt = performance.now();
     simulationRunning = true;
@@ -518,7 +552,7 @@ if (navigator.geolocation && !solarLocation) {
         ({ coords }) => {
             solarLocation = { latitude: coords.latitude, longitude: coords.longitude };
             storeSolarLocation(solarLocation);
-            updateSky();
+            updateSkyImmediately();
         },
         () => updateSky(),
         { enableHighAccuracy: false, maximumAge: 86400000, timeout: 5000 },

@@ -277,7 +277,8 @@ body{min-height:100vh;background:linear-gradient(145deg,var(--sky-start),var(--s
 @media(max-width:760px){#site-footer{padding-bottom:20px}.sky-simulation-control{margin-bottom:8px}}
 
 /* Full-viewport, scene-specific canvas animations. Only the selected sky is painted. */
-.nature-scene{position:absolute;inset:0 0 auto;width:100%;height:100vh;height:100svh;z-index:0;overflow:visible;pointer-events:none;opacity:.72}
+.nature-scene{position:absolute;inset:0 0 auto;width:100%;height:100vh;max-height:900px;height:100svh;max-height:900px;z-index:0;overflow:visible;pointer-events:none;opacity:.72}
+html,body{overflow-x:clip}
 #site-container{position:relative;z-index:1}
 .scene-canvas{position:absolute;inset:auto;display:block;max-width:none;opacity:1;pointer-events:none}
 @media(prefers-reduced-motion:reduce){html,body{transition:none}}

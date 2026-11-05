@@ -7,6 +7,9 @@ const angleDifference = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(t
 const wrap = (value, min, max) => value < min ? max - ((min - value) % (max - min)) : value > max ? min + ((value - max) % (max - min)) : value;
 const sceneMargin = 200;
 const sceneTransitionInStart = .52;
+let predawnCarryStars = [];
+let predawnCarryStarSet = new Set();
+let sharedStarRotation = 0;
 const canvas = document.querySelector(".nature-scene canvas");
 const context = canvas.getContext("2d", { alpha: true, desynchronized: true });
 const spriteAtlas = document.createElement("canvas");
@@ -133,6 +136,19 @@ function sceneEdgePoint(width, height, origin, margin = sceneMargin) {
   return { x: clamp(origin.x, 0, width), y: height + margin };
 }
 
+function sceneDirectionalExitPoint(width, height, origin, angle, margin = sceneMargin) {
+  const bounds = { left: -margin, right: width + margin, top: -margin, bottom: height + margin };
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  let distance = Infinity;
+  if (dx > 1e-6) distance = Math.min(distance, (bounds.right - origin.x) / dx);
+  if (dx < -1e-6) distance = Math.min(distance, (bounds.left - origin.x) / dx);
+  if (dy > 1e-6) distance = Math.min(distance, (bounds.bottom - origin.y) / dy);
+  if (dy < -1e-6) distance = Math.min(distance, (bounds.top - origin.y) / dy);
+  if (!Number.isFinite(distance) || distance < 0) return sceneEdgePoint(width, height, origin, margin);
+  return { x: origin.x + dx * distance, y: origin.y + dy * distance };
+}
+
 function sceneEntityOpacity(x, y, width, height) {
   const outsideX = Math.max(0, -x, x - width);
   const outsideY = Math.max(0, -y, y - height);
@@ -163,7 +179,7 @@ function sceneStarReveal(scene, star) {
   return smoothstep(revealProgress);
 }
 
-function updateSceneTransitionMover(scene, mover, dt, width, height, turnRate = 2.8) {
+function updateSceneTransitionMover(scene, mover, dt, width, height, turnRate = 2.8, exitStyle = "direct", entryStyle = "nearest") {
   const root = document.documentElement;
   const from = root.dataset.skyTransitionFrom;
   const to = root.dataset.skyScene;
@@ -185,8 +201,18 @@ function updateSceneTransitionMover(scene, mover, dt, width, height, turnRate = 
   const progress = Math.max(0, Math.min(1, (performance.now() - startedAt) / duration));
   if (!route || route.startedAt !== startedAt) {
     if (scene === from) {
+      const edgeDistances = [mover.x, width - mover.x, mover.y, height - mover.y];
+      const edge = edgeDistances.indexOf(Math.min(...edgeDistances));
+      const spread = exitStyle === "curved" ? random(-220, 220) : 0;
+      const target = exitStyle === "wind"
+        ? sceneDirectionalExitPoint(width, height, mover, Number(mover.exitAngle) || 0)
+        : sceneEdgePoint(width, height, mover);
+      if (exitStyle === "curved") {
+        if (edge < 2) target.y = clamp(mover.y + spread, 0, height);
+        else target.x = clamp(mover.x + spread, 0, width);
+      }
       const cruiseSpeed = Math.max(
-        28,
+        exitStyle === "wind" ? 220 : exitStyle === "curved" ? 48 : 28,
         Number(mover.speed) || 0,
         Number(mover.cruiseSpeed) || 0,
         Number(mover.targetSpeed) || 0,
@@ -194,13 +220,31 @@ function updateSceneTransitionMover(scene, mover, dt, width, height, turnRate = 
       route = {
         startedAt,
         role: "out",
-        target: sceneEdgePoint(width, height, mover),
+        target,
+        waypoint: exitStyle === "curved" ? {
+          x: (mover.x + target.x) / 2 + random(-100, 100),
+          y: (mover.y + target.y) / 2 + random(-100, 100),
+        } : null,
+        phase: 0,
         cruiseSpeed,
         speed: Math.max(8, Number(mover.speed) || 8),
       };
     } else {
       const home = { x: mover.x, y: mover.y };
-      const entry = sceneEdgePoint(width, height, home);
+      let entry = sceneEdgePoint(width, height, home);
+      if (entryStyle === "left") {
+        entry = {
+          x: -random(24, sceneMargin),
+          y: clamp(home.y + random(-110, 110), -sceneMargin, height + sceneMargin),
+        };
+      } else if (entryStyle === "distributed" && Number.isInteger(mover.entryEdge)) {
+        const spreadX = random(-width * .16, width * .16);
+        const spreadY = random(-height * .16, height * .16);
+        if (mover.entryEdge === 0) entry = { x: -sceneMargin, y: clamp(home.y + spreadY, -sceneMargin, height + sceneMargin) };
+        else if (mover.entryEdge === 1) entry = { x: width + sceneMargin, y: clamp(home.y + spreadY, -sceneMargin, height + sceneMargin) };
+        else if (mover.entryEdge === 2) entry = { x: clamp(home.x + spreadX, -sceneMargin, width + sceneMargin), y: -sceneMargin };
+        else entry = { x: clamp(home.x + spreadX, -sceneMargin, width + sceneMargin), y: height + sceneMargin };
+      }
       const cruiseSpeed = Math.max(
         28,
         Number(mover.speed) || 0,
@@ -226,7 +270,11 @@ function updateSceneTransitionMover(scene, mover, dt, width, height, turnRate = 
   if (route.completed) return route.role === "out";
   if (route.role === "in" && progress < sceneTransitionInStart) return true;
 
-  const target = route.role === "out" ? route.target : route.home;
+  let target = route.role === "out" ? route.target : route.home;
+  if (route.role === "out" && route.waypoint && route.phase === 0) {
+    target = route.waypoint;
+    if (Math.hypot(target.x - mover.x, target.y - mover.y) < 24) route.phase = 1;
+  }
   route.speed += (route.cruiseSpeed - route.speed) * Math.min(1, dt * 1.8);
   mover.speed = route.speed;
   moveTowardPoint(mover, target, dt, turnRate, route.speed);
@@ -243,11 +291,13 @@ function createAfternoonScene() {
       const height = 900;
       const pointer = { x: 0, y: 0, active: false };
       const leafColors = ["#b6a45f", "#c3a46b", "#9fae75", "#c78f63", "#a9b77b"];
-      const leaves = Array.from({ length: 20 }, (_, index) => ({
-        x: random(0, width),
-        y: random(-30, height + 30),
-        vx: random(-35, 35),
-        vy: random(-15, 15),
+      const leaves = Array.from({ length: 12 }, (_, index) => ({
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        active: false,
+        spawnIn: random(0, 9),
         heading: random(0, Math.PI * 2),
         speed: random(42, 78),
         size: index < 6 ? random(.35, .58) : random(.58, 1.12),
@@ -257,9 +307,9 @@ function createAfternoonScene() {
         color: leafColors[Math.floor(Math.random() * leafColors.length)],
       }));
       const wind = {
-        angle: random(-.35, .35),
-        targetAngle: random(-.6, .6),
-        directionIn: random(10, 18),
+        angle: random(-Math.PI, Math.PI),
+        targetAngle: random(-Math.PI, Math.PI),
+        directionIn: random(5, 10),
         nextGustIn: random(1.8, 4.2),
         gustRemaining: 0,
         gustDuration: 0,
@@ -272,18 +322,46 @@ function createAfternoonScene() {
         vortexX: 0,
         vortexY: 0,
         vortexRadius: 0,
+        exitAngle: null,
       };
       const clock = createSceneClock();
       let elapsed = 0;
 
+      function spawnLeaf(leaf) {
+        const windX = Math.cos(wind.angle);
+        const windY = Math.sin(wind.angle);
+        if (Math.abs(windX) >= Math.abs(windY)) {
+          leaf.x = windX >= 0
+            ? -sceneMargin - random(0, 32)
+            : width + sceneMargin + random(0, 32);
+          leaf.y = random(0, height);
+        } else {
+          leaf.x = random(0, width);
+          leaf.y = windY >= 0
+            ? -sceneMargin - random(0, 32)
+            : height + sceneMargin + random(0, 32);
+        }
+        leaf.vx = windX * random(26, 50) + random(-12, 12);
+        leaf.vy = windY * random(26, 50) + random(-12, 12);
+        leaf.active = true;
+      }
+
 
       function updateWind(dt) {
-        wind.directionIn -= dt;
-        if (wind.directionIn <= 0) {
-          wind.targetAngle = random(-Math.PI, Math.PI);
-          wind.directionIn = random(10, 20);
+        const root = document.documentElement;
+        const transitionFrom = root.dataset.skyTransitionFrom;
+        const isLeavingScene = transitionFrom === "afternoon";
+        if (isLeavingScene) {
+          if (wind.exitAngle === null) wind.exitAngle = wind.angle;
+        } else {
+          wind.exitAngle = null;
+          wind.directionIn -= dt;
+          if (wind.directionIn <= 0) {
+            wind.targetAngle = random(-Math.PI, Math.PI);
+            wind.directionIn = random(5, 11);
+          }
+          wind.angle += angleDifference(wind.angle, wind.targetAngle) * Math.min(1, dt * .24);
         }
-        wind.angle += angleDifference(wind.angle, wind.targetAngle) * Math.min(1, dt * .24);
         if (wind.gustRemaining > 0) {
           wind.gustRemaining -= dt;
         } else {
@@ -320,10 +398,35 @@ function createAfternoonScene() {
         const windSpeed = 34 + gust;
         const windX = Math.cos(wind.angle) * windSpeed;
         const windY = Math.sin(wind.angle) * windSpeed;
+        const isEnteringScene = root.dataset.skyScene === "afternoon" && transitionFrom && transitionFrom !== "afternoon";
+        const transitionStartedAt = Number(root.dataset.skyTransitionStartedAt);
+        const transitionDuration = Number(root.dataset.skyTransitionDuration) || 22000;
+        const transitionProgress = transitionStartedAt
+          ? clamp((performance.now() - transitionStartedAt) / transitionDuration, 0, 1)
+          : 1;
+        const canSpawn = !isEnteringScene || transitionProgress >= sceneTransitionInStart;
 
         for (const leaf of leaves) {
-          if (updateSceneTransitionMover("afternoon", leaf, dt, width, height, 1.8)) {
-            leaf.angle += leaf.spin / leaf.size * dt;
+          if (isLeavingScene) {
+            if (!leaf.active) continue;
+            leaf.exitAngle = wind.exitAngle;
+            if (updateSceneTransitionMover("afternoon", leaf, dt, width, height, 3.4, "wind")) {
+              leaf.angle += leaf.spin / leaf.size * dt;
+              if (sceneEntityOpacity(leaf.x, leaf.y, width, height) <= .001) {
+                leaf.active = false;
+                leaf.spawnIn = random(.8, 4.5);
+                sceneExitRoutes.delete(leaf);
+              }
+              continue;
+            }
+          }
+          if (!leaf.active) {
+            if (!canSpawn) continue;
+            leaf.spawnIn -= dt;
+            if (leaf.spawnIn > 0) continue;
+            spawnLeaf(leaf);
+          }
+          if (!leaf.active) {
             continue;
           }
           const sizeWind = 1.35 - leaf.size * .62;
@@ -365,10 +468,10 @@ function createAfternoonScene() {
           leaf.x += leaf.vx * dt;
           leaf.y += leaf.vy * dt;
           leaf.angle += (leaf.spin / leaf.size + gust * .0025 + turbulence * .0015 + vortexSpin) * dt;
-          if (leaf.x < -90) leaf.x = width + 90;
-          else if (leaf.x > width + 90) leaf.x = -90;
-          if (leaf.y < -100) leaf.y = height + 100;
-          else if (leaf.y > height + 100) leaf.y = -100;
+          if (leaf.x < -sceneMargin || leaf.x > width + sceneMargin || leaf.y < -sceneMargin || leaf.y > height + sceneMargin) {
+            leaf.active = false;
+            leaf.spawnIn = random(.8, 4.5);
+          }
         }
       }
 
@@ -410,7 +513,7 @@ function createAfternoonScene() {
         const { dt, elapsed: sceneTime } = clock(timestamp);
         elapsed = sceneTime;
         if (!reducedMotion) updateWind(dt);
-        drawActors(leaves, drawLeaf, elapsed, width, height);
+        drawActors(leaves.filter((leaf) => leaf.active), drawLeaf, elapsed, width, height);
       }
 
       function updatePointer(event) {
@@ -1015,16 +1118,19 @@ function createDuskScene() {
       ];
       const fireflies = startingPoints.map(([x, y], index) => {
         const side = index % 2 === 0 ? -1 : 1;
+        const [laneMin, laneMax] = edgeLane(side);
         return {
         side,
+        entryEdge: index % 4,
         x: edgeTargetX(side), y,
         heading: random(0, Math.PI * 2),
-        turnRate: random(-.35, .35),
-        targetTurn: random(-1.1, 1.1),
-        turnChangeIn: random(.25, .95),
+        targetX: random(laneMin + 24, laneMax - 24),
+        targetY: random(50, logicalHeight - 50),
+        targetIn: random(.8, 2.4),
         speed: random(10, 24),
         targetSpeed: random(14, 36),
-        hoverIn: random(1, 5),
+        hoverIn: random(3, 8),
+        hoverRemaining: 0,
         dartIn: random(3, 11),
         dartFor: 0,
         dartHeading: 0,
@@ -1054,7 +1160,7 @@ function createDuskScene() {
 
 
       function updateFirefly(bug, dt, time) {
-        if (updateSceneTransitionMover("dusk", bug, dt, logicalWidth, logicalHeight, 2.2)) {
+        if (updateSceneTransitionMover("dusk", bug, dt, logicalWidth, logicalHeight, 2.2, "curved", "distributed")) {
           bug.trailIn -= dt;
           if (bug.trailIn <= 0) {
             bug.trail.unshift({ x: bug.x, y: bug.y });
@@ -1063,16 +1169,22 @@ function createDuskScene() {
           }
           return;
         }
-        bug.turnChangeIn -= dt;
-        if (bug.turnChangeIn <= 0) {
-          bug.targetTurn = random(-1.25, 1.25);
-          bug.targetSpeed = random(13, 38);
-          bug.turnChangeIn = random(.35, 1.05);
-          bug.hoverIn -= 1;
-          if (bug.hoverIn <= 0) {
-            bug.targetSpeed = random(2, 7);
-            bug.hoverIn = random(2, 6);
-          }
+        bug.targetIn -= dt;
+        const targetDistance = Math.hypot(bug.targetX - bug.x, bug.targetY - bug.y);
+        if (bug.targetIn <= 0 || targetDistance < 70) {
+          const [laneMin, laneMax] = edgeLane(bug.side);
+          bug.targetX = random(laneMin + 24, laneMax - 24);
+          bug.targetY = random(45, logicalHeight - 45);
+          bug.targetIn = random(1.5, 3.5);
+          bug.targetSpeed = random(14, 38);
+        }
+        bug.hoverIn -= dt;
+        if (bug.hoverRemaining > 0) {
+          bug.hoverRemaining -= dt;
+          bug.targetSpeed = 3;
+        } else if (bug.hoverIn <= 0) {
+          bug.hoverRemaining = random(.3, .7);
+          bug.hoverIn = random(5, 10);
         }
 
         bug.dartIn -= dt;
@@ -1095,6 +1207,8 @@ function createDuskScene() {
         const outsideWeight = clamp(outsideDistance / 150, 0, 1);
         const inwardHeading = Math.atan2(logicalHeight / 2 - bug.y, logicalWidth / 2 - bug.x);
         const edgeSteer = angleDifference(bug.heading, inwardHeading) * (edgeWeight * 1.5 + outsideWeight * 1.8);
+        const waypointHeading = Math.atan2(bug.targetY - bug.y, bug.targetX - bug.x);
+        const weave = Math.sin(time * 1.7 + bug.phase) * .24 + Math.sin(time * 3.1 + bug.phase * 1.8) * .12;
         let pointerWeight = 0;
         let pointerSteer = 0;
         if (pointer.active) {
@@ -1108,8 +1222,8 @@ function createDuskScene() {
           }
         }
 
-        bug.turnRate += (bug.targetTurn + edgeSteer + pointerSteer - bug.turnRate) * Math.min(1, dt * 2.2);
-        bug.heading += (bug.turnRate + pointerSteer * 2.4) * dt;
+        const desiredTurn = angleDifference(bug.heading, waypointHeading + weave) + edgeSteer + pointerSteer * 2.4;
+        bug.heading += clamp(desiredTurn, -2.1 * dt, 2.1 * dt);
         let speed = bug.speed + (bug.targetSpeed - bug.speed) * Math.min(1, dt * 1.8);
         speed += pointerWeight * 90;
         if (bug.dartFor > 0) {
@@ -1123,7 +1237,8 @@ function createDuskScene() {
         bug.x += Math.cos(bug.heading) * speed * dt + Math.cos(time * 5 + bug.phase) * flutter * dt;
         bug.y += Math.sin(bug.heading) * speed * dt + flutter * dt;
         constrainToSceneLane(bug, logicalWidth, edgeLane, dt);
-        bug.y = wrap(bug.y, worldBounds.top, worldBounds.bottom);
+        bug.x = clamp(bug.x, worldBounds.left, worldBounds.right);
+        bug.y = clamp(bug.y, worldBounds.top, worldBounds.bottom);
 
         bug.trailIn -= dt;
         if (bug.trailIn <= 0) {
@@ -1204,12 +1319,13 @@ function createGoldenScene() {
       const height = 900;
       const color = "#2c2526";
       const edgeLane = (side) => sceneEdgeLane(side, width);
-      const edgeTargetX = (side) => sceneEdgeTargetX(side, width);
+      const edgeTargetX = (side) => side < 0 ? random(58, width * .18) : random(width * .82, width - 58);
 
       const flock = Array.from({ length: 14 }, (_, index) => {
         const side = index < 7 ? -1 : 1;
         return {
         side,
+        entryEdge: index % 4,
         x: edgeTargetX(side),
         y: height * .38 + random(-105, 105),
         heading: random(0, Math.PI * 2),
@@ -1243,7 +1359,7 @@ function createGoldenScene() {
 
 
       function moveLeader(leader, dt) {
-        if (updateSceneTransitionMover("golden", leader, dt, width, height, 2.4)) return;
+        if (updateSceneTransitionMover("golden", leader, dt, width, height, 2.4, "direct", "distributed")) return;
         leader.targetIn -= dt;
         if (leader.targetIn <= 0) {
           leader.targetX = edgeTargetX(leader.side);
@@ -1283,7 +1399,7 @@ function createGoldenScene() {
         for (let index = 0; index < flock.length; index += 1) {
           const bird = flock[index];
           if (leaders.includes(bird)) continue;
-          if (updateSceneTransitionMover("golden", bird, dt, width, height, 2.7)) continue;
+          if (updateSceneTransitionMover("golden", bird, dt, width, height, 2.7, "direct", "distributed")) continue;
           const leader = bird.side < 0 ? leaders[0] : leaders[1];
           const own = snapshots[index];
           let centerX = 0;
@@ -1650,7 +1766,6 @@ function createMorningScene() {
 // Night canvas animation, adapted from /animations/night.html
 function createNightScene() {
       const viewBox = { width: 1440, height: 900 };
-      let rotation = 0;
       const clock = createSceneClock();
 
       const backgroundStars = [[131.700,151.080,0.710,"#c6d9ff",true,0.000000,0.00200],
@@ -1784,6 +1899,13 @@ function createNightScene() {
         rate: .002 + (index % 11) * .00024,
       }));
       const stars = [...backgroundStars, ...projected].map((star) => ({ ...star, revealDelay: Math.random() * 2600 }));
+      const carryCandidates = [...stars];
+      for (let index = carryCandidates.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [carryCandidates[index], carryCandidates[swapIndex]] = [carryCandidates[swapIndex], carryCandidates[index]];
+      }
+      predawnCarryStars = carryCandidates.slice(0, Math.min(56, carryCandidates.length));
+      predawnCarryStarSet = new Set(predawnCarryStars);
       const glowSprites = new Map();
       for (const star of stars) {
         if (!star.glow || glowSprites.has(star.color)) continue;
@@ -1872,14 +1994,18 @@ function createNightScene() {
 
       function renderScene(time) {
         const { dt } = clock(time);
-        rotation = (rotation + dt * Math.PI * 2 / 1800) % (Math.PI * 2);
+        sharedStarRotation = (sharedStarRotation + dt * Math.PI * 2 / 1800) % (Math.PI * 2);
         updateMeteor(dt);
         const centerX = viewBox.width / 2;
         const centerY = viewBox.height / 2;
-        const cosine = Math.cos(rotation);
-        const sine = Math.sin(rotation);
+        const cosine = Math.cos(sharedStarRotation);
+        const sine = Math.sin(sharedStarRotation);
         for (const star of stars) {
           const wave = (Math.sin(time * star.rate + star.phase) + 1) / 2;
+          const carriesIntoPredawn = document.documentElement.dataset.skyTransitionFrom === "night"
+            && document.documentElement.dataset.skyScene === "predawn"
+            && predawnCarryStarSet.has(star);
+          const reveal = carriesIntoPredawn ? 1 : sceneStarReveal("night", star);
           const dx = star.x - centerX;
           const dy = star.y - centerY;
           const x = centerX + dx * cosine - dy * sine;
@@ -1887,11 +2013,11 @@ function createNightScene() {
           context.fillStyle = star.color;
           if (star.glow) {
             const haloSize = 10 + star.radius * 3;
-            context.globalAlpha = (.2 + wave * .25) * sceneStarReveal("night", star);
+            context.globalAlpha = (.2 + wave * .25) * reveal;
             const sprite = glowSprites.get(star.color);
             context.drawImage(spriteAtlas, sprite.x, sprite.y, sprite.width, sprite.height, x - haloSize / 2, y - haloSize / 2, haloSize, haloSize);
           }
-          context.globalAlpha = (.34 + wave * .56) * sceneStarReveal("night", star);
+          context.globalAlpha = (.34 + wave * .56) * reveal;
           context.shadowBlur = 0;
           context.beginPath();
           context.arc(x, y, star.radius * (.9 + wave * .2), 0, Math.PI * 2);
@@ -2196,24 +2322,13 @@ function createPredawnScene() {
       const bugWorld = { left: -logicalWidth * .35, right: logicalWidth * 1.35, top: -logicalHeight * .35, bottom: logicalHeight * 1.35 };
       const clock = createSceneClock();
       let elapsed = 0;
-      let skyRotation = 0;
 
       const edgeLane = (side) => sceneEdgeLane(side, logicalWidth);
       const edgeTargetX = (side) => sceneEdgeTargetX(side, logicalWidth);
 
 
       // Match the night preview: tiny multicolour points, random twinkle phases and selective glow.
-      const starColors = ["#eef3ff", "#ffe1ad", "#c9dcff", "#fff1d4", "#dce8ff", "#fff6e7", "#ffd49a"];
-      const stars = Array.from({ length: 112 }, () => ({
-        x: random(8, logicalWidth - 8),
-        y: random(8, logicalHeight - 8),
-        radius: random(.38, .86),
-        color: starColors[Math.floor(Math.random() * starColors.length)],
-        glow: Math.random() < .3,
-        phase: random(0, Math.PI * 2),
-        rate: random(1.4, 2.9),
-        revealDelay: random(0, 2600),
-      }));
+      const stars = [...predawnCarryStars];
 
       const bugs = [
         [225, 295], [1130, 670], [495, 200], [1320, 350], [720, 690], [870, 445],
@@ -2394,7 +2509,9 @@ function createPredawnScene() {
 
       function drawStar(star, time) {
         const wave = (Math.sin(time * star.rate + star.phase) + 1) / 2;
-        context.globalAlpha = (.34 + wave * .56) * sceneStarReveal("predawn", star);
+        const carryFromNight = document.documentElement.dataset.skyTransitionFrom === "night"
+          && document.documentElement.dataset.skyScene === "predawn";
+        context.globalAlpha = (.34 + wave * .56) * (carryFromNight ? 1 : sceneStarReveal("predawn", star));
         context.fillStyle = star.color;
         context.shadowColor = star.glow ? star.color : "transparent";
         context.shadowBlur = star.glow ? 2.4 + wave * 3.4 : 0;
@@ -2492,15 +2609,15 @@ function createPredawnScene() {
       function renderScene(timestamp = 0) {
         const { dt, elapsed: sceneTime } = clock(timestamp);
         elapsed = sceneTime;
-        skyRotation = (skyRotation + dt * Math.PI * 2 / 1800) % (Math.PI * 2);
+        sharedStarRotation = (sharedStarRotation + dt * Math.PI * 2 / 1800) % (Math.PI * 2);
         context.shadowBlur = 0;
         const centerX = logicalWidth / 2;
         const centerY = logicalHeight / 2;
         context.save();
         context.translate(centerX, centerY);
-        context.rotate(skyRotation);
+        context.rotate(sharedStarRotation);
         context.translate(-centerX, -centerY);
-        for (const star of stars) drawStar(star, elapsed);
+        for (const star of stars) drawStar(star, timestamp);
         context.restore();
         context.globalAlpha = 1;
         context.shadowBlur = 0;
